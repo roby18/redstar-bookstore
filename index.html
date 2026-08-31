@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>红色书屋 · 互动阅读</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+:root{--red:#B22222;--red-deep:#8B0000;--red-light:#DC143C;--wood:#6B3410;--wood-light:#8B4513;--wood-dark:#4A2408;--gold:#D4A843;--gold-light:#F0D080;--paper:#F5EFE0;--paper-dark:#E8DEC8;--paper-darker:#D8CCB4;--ink:#1A1A1A;--ink-soft:#3D3D3D;--ink-mute:#6B6B6B;--serif:'Noto Serif SC','Songti SC',serif;--sans:'Noto Sans SC','PingFang SC',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:var(--sans);background:#1a0e05;color:var(--ink);user-select:none}
+.scene{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease,transform .8s ease}
+.scene.hidden{opacity:0;pointer-events:none;transform:scale(1.05)}
+
+/* ===== 书店 ===== */
+#scene-store{background:linear-gradient(180deg,#2a1810 0%,#1a0e05 100%);z-index:10}
+.store-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(212,168,67,.15) 0%,transparent 60%),linear-gradient(180deg,#2a1810 0%,#1a0e05 100%)}
+.store-sign{position:absolute;top:8%;left:50%;transform:translateX(-50%);text-align:center;z-index:5}
+.store-sign-board{background:linear-gradient(180deg,#3d1f08,#2a1405);border:3px solid var(--gold);padding:16px 48px;border-radius:4px;box-shadow:0 0 40px rgba(212,168,67,.3),inset 0 0 20px rgba(0,0,0,.5);position:relative}
+.store-sign-board::before,.store-sign-board::after{content:'';position:absolute;top:-12px;width:8px;height:12px;background:var(--gold);border-radius:2px}
+.store-sign-board::before{left:20px}.store-sign-board::after{right:20px}
+.store-sign h1{font-family:var(--serif);font-size:clamp(28px,5vw,48px);font-weight:900;color:var(--gold-light);letter-spacing:12px;text-shadow:0 0 20px rgba(212,168,67,.5)}
+.store-sign p{font-size:12px;color:rgba(212,168,67,.6);letter-spacing:6px;margin-top:6px}
+
+/* 精致灯笼 */
+.lantern{position:absolute;top:5%;width:64px;z-index:4;animation:lanternSway 4s ease-in-out infinite;transform-origin:top center}
+.lantern.left{left:12%}.lantern.right{right:12%;animation-delay:-2s}
+.lantern-string{width:2px;height:20px;background:linear-gradient(180deg,var(--gold),#8B6914);margin:0 auto}
+.lantern-cap{width:36px;height:8px;background:linear-gradient(180deg,var(--gold-light),var(--gold));margin:0 auto;border-radius:2px}
+.lantern-body{width:64px;height:72px;background:radial-gradient(ellipse at 35% 35%,#ff4444,#C41E3A 40%,#8B0000 80%);border-radius:50%;box-shadow:0 0 40px rgba(220,20,60,.7),inset -8px -8px 20px rgba(0,0,0,.4),inset 4px 4px 15px rgba(255,100,100,.3);position:relative;display:flex;align-items:center;justify-content:center}
+.lantern-body::before{content:'';position:absolute;inset:6px;border:1px solid rgba(212,168,67,.4);border-radius:50%}
+.lantern-char{font-family:var(--serif);font-size:22px;font-weight:900;color:var(--gold-light);text-shadow:0 0 8px rgba(212,168,67,.8);z-index:2}
+.lantern-bottom{width:28px;height:6px;background:linear-gradient(180deg,var(--gold),#8B6914);margin:0 auto;border-radius:0 0 2px 2px}
+.lantern-tassel{width:2px;height:18px;background:var(--gold);margin:0 auto;position:relative}
+.lantern-tassel::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:8px;height:10px;background:linear-gradient(180deg,var(--gold),#8B6914);border-radius:0 0 4px 4px}
+@keyframes lanternSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+
+.door-frame{position:relative;width:min(360px,70vw);height:min(520px,65vh);z-index:3;margin-top:40px}
+.door-arch{position:absolute;top:-30px;left:-20px;right:-20px;height:60px;background:linear-gradient(180deg,var(--wood-light),var(--wood));border-radius:8px 8px 0 0;border:2px solid var(--gold);border-bottom:none}
+.door-container{position:relative;width:100%;height:100%;perspective:1200px}
+.door-left,.door-right{position:absolute;top:0;width:50%;height:100%;background:repeating-linear-gradient(90deg,rgba(0,0,0,.1) 0,rgba(0,0,0,.1) 1px,transparent 1px,transparent 40px),linear-gradient(180deg,var(--wood-light) 0%,var(--wood) 50%,var(--wood-dark) 100%);border:2px solid var(--gold);transition:transform 1.5s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.door-left{left:0;transform-origin:left center;border-right:1px solid var(--gold);border-radius:4px 0 0 4px}
+.door-right{right:0;transform-origin:right center;border-left:1px solid var(--gold);border-radius:0 4px 4px 0}
+.door-left.open{transform:rotateY(-105deg)}.door-right.open{transform:rotateY(105deg)}
+.door-panel{position:absolute;border:2px solid rgba(212,168,67,.4);border-radius:2px}
+.door-left .door-panel:nth-child(1){top:12%;left:15%;right:15%;height:30%}
+.door-left .door-panel:nth-child(2){bottom:12%;left:15%;right:15%;height:30%}
+.door-right .door-panel:nth-child(1){top:12%;left:15%;right:15%;height:30%}
+.door-right .door-panel:nth-child(2){bottom:12%;left:15%;right:15%;height:30%}
+.door-handle{position:absolute;top:50%;width:14px;height:14px;background:radial-gradient(circle at 35% 35%,var(--gold-light),var(--gold));border-radius:50%;box-shadow:0 0 10px rgba(212,168,67,.6);transform:translateY(-50%);z-index:5}
+.door-left .door-handle{right:12px}.door-right .door-handle{left:12px}
+.door-light{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,220,150,.9) 0%,rgba(255,200,100,.4) 40%,transparent 70%);opacity:0;transition:opacity .8s ease .5s;z-index:1}
+.door-container.open .door-light{opacity:1}
+.enter-hint{position:absolute;bottom:-60px;left:50%;transform:translateX(-50%);text-align:center;color:var(--gold);font-family:var(--serif);font-size:15px;letter-spacing:4px;animation:hintPulse 2s ease-in-out infinite;cursor:pointer;z-index:6;white-space:nowrap}
+.enter-hint svg{display:block;margin:8px auto 0;width:24px;height:24px;stroke:var(--gold);animation:arrowBounce 1.5s ease-in-out infinite}
+@keyframes hintPulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes arrowBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+.store-floor{position:absolute;bottom:0;left:0;right:0;height:15%;background:linear-gradient(180deg,var(--wood-dark),#0d0602);z-index:0}
+
+/* ===== 书架 ===== */
+#scene-shelf{background:linear-gradient(180deg,#3d2010 0%,#2a1608 50%,#1a0d04 100%);z-index:5}
+.shelf-room{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(212,168,67,.12) 0%,transparent 60%),linear-gradient(180deg,#3d2010 0%,#2a1608 50%,#1a0d04 100%)}
+.shelf-header{position:absolute;top:5%;left:50%;transform:translateX(-50%);text-align:center;z-index:5}
+.shelf-header h2{font-family:var(--serif);font-size:clamp(22px,3.5vw,36px);font-weight:900;color:var(--gold-light);letter-spacing:8px;text-shadow:0 0 20px rgba(212,168,67,.4)}
+.shelf-header p{font-size:12px;color:rgba(212,168,67,.5);letter-spacing:4px;margin-top:6px}
+.back-btn{position:absolute;top:24px;left:24px;z-index:20;background:rgba(0,0,0,.4);border:1px solid rgba(212,168,67,.4);color:var(--gold);padding:8px 18px;font-family:var(--serif);font-size:13px;cursor:pointer;border-radius:2px;transition:all .3s;letter-spacing:2px}
+.back-btn:hover{background:rgba(212,168,67,.15);border-color:var(--gold)}
+.bookshelf{position:relative;width:min(800px,90vw);z-index:3}
+.shelf-board{height:24px;background:linear-gradient(180deg,var(--wood-light),var(--wood) 60%,var(--wood-dark));border-radius:2px;box-shadow:0 4px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(212,168,67,.3)}
+.shelf-area{display:flex;align-items:flex-end;justify-content:center;gap:60px;padding:40px 40px 0;min-height:360px;background:linear-gradient(180deg,rgba(0,0,0,.3),transparent 30%),repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 60px),linear-gradient(180deg,#2a1608,#1f1005);border-left:6px solid var(--wood);border-right:6px solid var(--wood)}
+.book-wrap{perspective:1000px}
+.book{position:relative;width:180px;height:270px;cursor:pointer;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.34,1.56,.64,1);transform:rotateY(-18deg) rotateX(3deg)}
+.book:hover{transform:rotateY(-8deg) rotateX(1deg) translateY(-24px)}
+.book-cover{position:absolute;inset:0;border-radius:3px 8px 8px 3px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:28px 16px;overflow:hidden;box-shadow:inset -6px 0 12px rgba(0,0,0,.35),inset 3px 0 6px rgba(255,255,255,.08),6px 8px 24px rgba(0,0,0,.6);backface-visibility:hidden}
+.book-cover::before{content:'';position:absolute;top:0;left:0;bottom:0;width:10px;background:linear-gradient(90deg,rgba(0,0,0,.5),transparent)}
+.book-cover::after{content:'';position:absolute;inset:0;border:2px solid rgba(212,168,67,.35);border-radius:3px 8px 8px 3px;margin:7px;pointer-events:none}
+.book-pages-right{position:absolute;top:5px;right:-14px;bottom:5px;width:14px;background:linear-gradient(90deg,#d4c9b0,#f0e8d4 30%,#e8dfc8 60%,#ccc2a6);transform:rotateY(90deg);transform-origin:left center;border-radius:0 2px 2px 0}
+.book-pages-right::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.06) 0,rgba(0,0,0,.06) 1px,transparent 1px,transparent 3px);border-radius:0 2px 2px 0}
+.book-pages-top{position:absolute;top:-14px;left:5px;right:5px;height:14px;background:linear-gradient(180deg,#e8dfc8,#f0e8d4,#d4c9b0);transform:rotateX(90deg);transform-origin:bottom center;border-radius:2px 2px 0 0}
+.book-pages-top::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 3px)}
+.book-glare{position:absolute;inset:0;border-radius:3px 8px 8px 3px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5}
+.book:hover .book-glare{opacity:1}
+.book-redstar .book-cover{background:linear-gradient(160deg,#C41E3A 0%,#8B0000 55%,#5C0000 100%)}
+.book-redstar .cover-star{width:38px;height:38px;fill:var(--gold);filter:drop-shadow(0 0 8px rgba(212,168,67,.7));margin-top:6px}
+.book-redstar .cover-title{font-family:var(--serif);font-size:26px;font-weight:900;color:var(--gold-light);letter-spacing:4px;line-height:1.4;text-align:center;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.book-redstar .cover-sub{font-size:10px;color:rgba(240,208,128,.6);letter-spacing:2px;text-align:center;font-family:var(--serif)}
+.book-redstar .cover-author{font-size:12px;color:rgba(240,208,128,.75);letter-spacing:3px;font-family:var(--serif);text-align:center}
+.book-redstar .cover-line{width:40px;height:1px;background:var(--gold);opacity:.5;margin:0 auto}
+.book-redcrag .book-cover{background:linear-gradient(160deg,#8B1A1A 0%,#5C0A0A 55%,#3D0505 100%)}
+.book-redcrag .cover-icon{width:34px;height:34px;stroke:#C9A96E;fill:none;stroke-width:2;margin-top:6px}
+.book-redcrag .cover-title{font-family:var(--serif);font-size:32px;font-weight:900;color:#C9A96E;letter-spacing:8px;text-align:center;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.book-redcrag .cover-sub{font-size:10px;color:rgba(201,169,110,.55);letter-spacing:2px;text-align:center;font-family:var(--serif)}
+.book-redcrag .cover-author{font-size:12px;color:rgba(201,169,110,.7);letter-spacing:2px;font-family:var(--serif);text-align:center}
+.book-redcrag .cover-line{width:40px;height:1px;background:#C9A96E;opacity:.4;margin:0 auto}
+.book-locked{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:var(--gold);font-size:12px;padding:6px 14px;border-radius:2px;letter-spacing:2px;z-index:6;opacity:0;transition:opacity .3s;white-space:nowrap}
+.book-redcrag:hover .book-locked{opacity:1}
+
+/* ===== 阅读场景 ===== */
+#scene-reader{background:linear-gradient(135deg,#2a1810 0%,#1a0e05 100%);z-index:8}
+.reader-outer{width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.reader-close-btn{position:absolute;top:20px;right:24px;z-index:50;background:rgba(0,0,0,.4);border:1px solid rgba(212,168,67,.4);color:var(--gold);padding:8px 18px;font-family:var(--serif);font-size:13px;cursor:pointer;border-radius:2px;transition:all .3s;letter-spacing:2px}
+.reader-close-btn:hover{background:rgba(212,168,67,.15);border-color:var(--gold)}
+
+/* 目录 DepthCarousel */
+.reader-menu{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;transition:opacity .4s ease}
+.reader-menu.hidden{opacity:0;pointer-events:none}
+.menu-title{font-family:var(--serif);font-size:clamp(24px,4vw,40px);font-weight:900;color:var(--gold-light);letter-spacing:10px;margin-bottom:8px;text-shadow:0 0 30px rgba(212,168,67,.4)}
+.menu-subtitle{font-size:13px;color:rgba(212,168,67,.5);letter-spacing:6px;margin-bottom:40px}
+.carousel-wrap{position:relative;width:100%;height:340px;perspective:1400px;display:flex;align-items:center;justify-content:center}
+.mc-card{position:absolute;width:200px;height:280px;background:linear-gradient(160deg,#C41E3A,#8B0000);border:2px solid rgba(212,168,67,.4);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .6s,filter .6s;box-shadow:0 10px 40px rgba(0,0,0,.5);padding:20px;text-align:center}
+.mc-card .mc-num{font-family:var(--serif);font-size:14px;color:var(--gold);opacity:.7;letter-spacing:3px;margin-bottom:12px}
+.mc-card .mc-name{font-family:var(--serif);font-size:22px;font-weight:900;color:var(--gold-light);letter-spacing:4px;line-height:1.4;margin-bottom:8px}
+.mc-card .mc-en{font-size:10px;color:rgba(240,208,128,.5);letter-spacing:1px}
+.mc-card .mc-star{width:28px;height:28px;fill:var(--gold);opacity:.6;margin-top:16px}
+.mc-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(212,168,67,.4);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;font-size:20px;transition:all .3s}
+.mc-nav:hover{background:rgba(212,168,67,.2)}
+.mc-nav.prev{left:8%}.mc-nav.next{right:8%}
+.mc-nav:disabled{opacity:.3;cursor:default}
+.menu-back{position:absolute;top:24px;left:24px;background:rgba(0,0,0,.4);border:1px solid rgba(212,168,67,.4);color:var(--gold);padding:8px 18px;font-family:var(--serif);font-size:13px;cursor:pointer;border-radius:2px;transition:all .3s;letter-spacing:2px;z-index:10}
+.menu-back:hover{background:rgba(212,168,67,.15);border-color:var(--gold)}
+
+/* 详情页 */
+.reader-detail{width:min(960px,94vw);height:min(720px,86vh);background:var(--paper);border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(212,168,67,.25);display:flex;flex-direction:column;overflow:hidden;position:absolute;opacity:0;pointer-events:none;transition:opacity .4s ease}
+.reader-detail.show{opacity:1;pointer-events:auto}
+.detail-header{padding:18px 32px 14px;background:linear-gradient(135deg,var(--red-deep),var(--red));color:var(--paper);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.detail-header .dh-left{display:flex;align-items:center;gap:14px}
+.detail-header .dh-num{font-family:var(--serif);font-size:13px;color:var(--gold-light);letter-spacing:3px;border:1px solid rgba(212,168,67,.5);padding:3px 10px;border-radius:2px}
+.detail-header .dh-title{font-family:var(--serif);font-size:22px;font-weight:900;letter-spacing:4px}
+.detail-header .dh-nav{display:flex;gap:6px}
+.detail-header .dh-nav button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:var(--paper);width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:16px}
+.detail-header .dh-nav button:hover{background:rgba(255,255,255,.3)}
+.detail-header .dh-nav button:disabled{opacity:.3;cursor:default}
+.detail-body{flex:1;overflow-y:auto;padding:28px 36px}
+.detail-body::-webkit-scrollbar{width:6px}
+.detail-body::-webkit-scrollbar-thumb{background:var(--ink-mute);border-radius:3px}
+.detail-footer{flex-shrink:0;padding:10px 32px;border-top:1px solid var(--paper-darker);font-size:11px;color:var(--ink-mute);display:flex;justify-content:space-between;font-family:var(--serif)}
+
+/* 通用内容 */
+.cb-h{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--red-deep);margin:20px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--red);display:inline-block}
+.cb-p{font-size:14px;line-height:2;color:var(--ink-soft);text-align:justify}
+.cb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.cb-cell{background:var(--paper-dark);padding:12px 14px;border-radius:4px;border-left:3px solid var(--red)}
+.cb-cell .k{font-size:11px;color:var(--red);font-weight:700;letter-spacing:1px;margin-bottom:4px;font-family:var(--serif)}
+.cb-cell .v{font-size:13px;color:var(--ink);line-height:1.6}
+
+/* LineSidebar 第二章 */
+.ls-wrap{display:flex;gap:24px;min-height:520px}
+.ls-sidebar{width:200px;flex-shrink:0;position:relative;overflow-y:auto;max-height:560px}
+.ls-item{padding:12px 16px 12px 24px;font-family:var(--serif);font-size:15px;color:var(--ink-mute);cursor:pointer;transition:all .3s;position:relative;border-left:2px solid transparent;margin-bottom:2px;line-height:1.5}
+.ls-item:hover,.ls-item.active{color:var(--red-deep);font-weight:700}
+.ls-item.active{border-left-color:var(--red);background:rgba(178,34,34,.08)}
+.ls-marker{position:absolute;left:0;width:3px;height:0;background:var(--red);transition:all .3s;pointer-events:none}
+.ls-content{flex:1;background:var(--paper-dark);padding:28px 32px;border-radius:6px;min-height:480px;overflow-y:auto}
+.ls-content h4{font-family:var(--serif);font-size:18px;font-weight:900;color:var(--red-deep);margin-bottom:12px}
+.ls-content p{font-size:14px;line-height:2;color:var(--ink-soft)}
+
+/* 长征地图 */
+.lm-top{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.lm-stat{text-align:center;padding:16px 8px;background:linear-gradient(135deg,var(--red-deep),var(--red));color:var(--paper);border-radius:4px}
+.lm-stat .n{font-family:var(--serif);font-size:28px;font-weight:900;color:var(--gold-light);line-height:1}
+.lm-stat .u{font-size:12px;margin-top:4px}.lm-stat .de{font-size:10px;opacity:.7;margin-top:2px}
+.map-wrap{position:relative;background:var(--paper-dark);border-radius:4px;overflow:hidden}
+.map-svg{width:100%;height:auto;display:block}
+.map-point{cursor:pointer;transition:all .3s}
+.map-point:hover circle{fill:var(--gold);r:8}
+.map-popup{position:absolute;background:var(--paper);border:2px solid var(--red);border-radius:6px;padding:14px 18px;max-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.3);z-index:20;display:none}
+.map-popup.show{display:block;animation:popIn .3s ease}
+@keyframes popIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.map-popup h5{font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px}
+.map-popup .mp-time{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px}
+.map-popup p{font-size:12px;line-height:1.7;color:var(--ink-soft)}
+.map-popup .mp-close{position:absolute;top:6px;right:10px;cursor:pointer;color:var(--ink-mute);font-size:16px;background:none;border:none}
+
+/* 微信主页 */
+.wx-profile{background:#EDEDED;max-width:420px;margin:0 auto;border-radius:8px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.wx-top{background:linear-gradient(135deg,#4A4A4A,#2D2D2D);padding:24px 20px;display:flex;align-items:center;gap:16px;position:relative}
+.wx-avatar{width:64px;height:64px;border-radius:6px;overflow:hidden;cursor:pointer;flex-shrink:0;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:28px;font-weight:900;color:var(--gold-light);transition:transform .3s}
+.wx-avatar:hover{transform:scale(1.05)}
+.wx-avatar img{width:100%;height:100%;object-fit:cover}
+.wx-info{flex:1}
+.wx-name{font-family:var(--serif);font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+.wx-id{font-size:12px;color:rgba(255,255,255,.6)}
+.wx-qr{width:20px;height:20px;border:1.5px solid rgba(255,255,255,.4);border-radius:2px}
+.wx-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#fff;border-bottom:1px solid #EDEDED;cursor:pointer;transition:background .2s}
+.wx-row:hover{background:#F5F5F5}
+.wx-row .label{font-size:14px;color:#333}
+.wx-row .value{font-size:13px;color:#999;display:flex;align-items:center;gap:6px}
+.wx-row .arrow{color:#CCC;font-size:16px}
+.wx-moments-entry{display:flex;align-items:center;gap:10px}
+.wx-moments-entry .m-imgs{display:flex;gap:2px}
+.wx-moments-entry .m-img{width:24px;height:24px;background:var(--red);border-radius:2px}
+.wx-tags{display:flex;flex-wrap:wrap;gap:6px;padding:12px 20px;background:#fff}
+.wx-tag{font-size:11px;padding:3px 10px;background:rgba(178,34,34,.1);color:var(--red-deep);border-radius:12px}
+
+/* 朋友圈 */
+.wx-moments{background:#fff;max-width:420px;margin:0 auto;border-radius:8px;overflow:hidden;display:none}
+.wx-moments.show{display:block}
+.wx-moments-header{background:linear-gradient(135deg,#4A4A4A,#2D2D2D);padding:16px 20px;display:flex;align-items:center;gap:12px;color:#fff}
+.wx-moments-header .back{cursor:pointer;font-size:20px}
+.wx-moments-header .title{font-family:var(--serif);font-size:16px;font-weight:700;flex:1;text-align:center}
+.wx-moment{padding:16px 20px;border-bottom:1px solid #EEE;display:flex;gap:12px}
+.wx-moment .m-avatar{width:40px;height:40px;border-radius:4px;flex-shrink:0;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;font-weight:900;color:var(--gold-light)}
+.wx-moment .m-body{flex:1}
+.wx-moment .m-name{font-size:13px;color:#576B95;font-weight:700;margin-bottom:4px}
+.wx-moment .m-text{font-size:13px;color:#333;line-height:1.7;margin-bottom:6px}
+.wx-moment .m-loc{font-size:11px;color:#576B95;margin-bottom:4px}
+.wx-moment .m-time{font-size:11px;color:#999}
+
+/* 头像放大 */
+.avatar-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:200;cursor:pointer}
+.avatar-modal.show{display:flex}
+.avatar-modal img{max-width:80vw;max-height:80vh;border-radius:8px;box-shadow:0 0 60px rgba(212,168,67,.3)}
+
+/* 关系图 */
+.rel-wrap{background:var(--paper-dark);border-radius:8px;padding:20px;overflow-x:auto}
+.rel-svg{width:100%;min-width:500px;height:auto}
+.rel-node{cursor:pointer;transition:all .3s}
+.rel-node:hover circle{stroke:var(--gold);stroke-width:3}
+.rel-line{transition:all .3s}
+
+/* 真题 */
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.quiz-source{font-size:11px;color:var(--gold);background:rgba(212,168,67,.1);padding:3px 10px;border-radius:2px;font-weight:700}
+.quiz-refresh{background:var(--red);color:var(--paper);border:none;padding:8px 16px;font-family:var(--serif);font-size:13px;cursor:pointer;border-radius:4px;transition:background .2s;letter-spacing:1px}
+.quiz-refresh:hover{background:var(--red-deep)}
+.quiz-item{background:var(--paper-dark);padding:18px 20px;border-radius:6px;margin-bottom:14px;border-left:4px solid var(--red)}
+.quiz-item .q-num{font-family:var(--serif);font-size:13px;color:var(--red);font-weight:900;margin-bottom:6px}
+.quiz-item .q-text{font-family:var(--serif);font-size:14px;line-height:1.8;margin-bottom:12px;color:var(--ink)}
+.quiz-opts{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:8px 14px;background:var(--paper);border:1px solid var(--ink-mute);cursor:pointer;font-size:13px;transition:all .2s;color:var(--ink-soft);border-radius:3px}
+.quiz-opt:hover{border-color:var(--red);background:rgba(178,34,34,.05)}
+.quiz-opt.correct{border-color:#4CAF50;background:rgba(76,175,80,.12);color:#2E7D32;font-weight:700}
+.quiz-opt.wrong{border-color:#f44336;background:rgba(244,67,54,.12);color:#C62828}
+.quiz-opt.disabled{pointer-events:none}
+.quiz-answer{display:none;margin-top:12px;padding:14px;background:rgba(178,34,34,.06);border-left:3px solid var(--red);border-radius:0 4px 4px 0;font-size:12px;line-height:1.9;color:var(--ink-soft)}
+.quiz-answer.show{display:block}
+.quiz-answer .ans-label{font-weight:900;color:var(--red-deep);margin-bottom:6px;font-family:var(--serif)}
+.quiz-answer .ans-points{margin-top:8px;padding-top:8px;border-top:1px dashed var(--ink-mute)}
+.quiz-answer .ans-points .pt{display:flex;gap:6px;margin-bottom:3px}
+.quiz-answer .ans-points .pt-score{color:var(--gold);font-weight:700;flex-shrink:0}
+
+/* OptionWheel 金句 */
+.wheel-wrap{position:relative;height:420px;perspective:1000px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wheel-item{position:absolute;font-family:var(--serif);font-size:18px;font-weight:700;color:var(--ink-mute);cursor:pointer;transition:all .5s cubic-bezier(.4,0,.2,1);white-space:nowrap;letter-spacing:2px}
+.wheel-item.active{font-size:24px;color:var(--red-deep);text-shadow:0 2px 10px rgba(178,34,34,.2)}
+.wheel-display{text-align:center;margin-top:20px;padding:24px;background:var(--paper-dark);border-radius:8px;min-height:100px;display:flex;align-items:center;justify-content:center}
+.wheel-display .wd-text{font-family:var(--serif);font-size:16px;line-height:2;color:var(--ink-soft);font-style:italic;max-width:500px}
+.wheel-display .wd-src{font-size:12px;color:var(--ink-mute);margin-top:8px}
+.wheel-hint{text-align:center;font-size:12px;color:var(--ink-mute);margin-top:12px}
+
+/* 长征节点卡片 */
+.march-nodes{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+.march-node{background:var(--paper-dark);border-radius:6px;padding:18px 22px;border-left:5px solid var(--red);position:relative;transition:transform .2s}
+.march-node:hover{transform:translateX(4px)}
+.mn-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.mn-time{font-family:var(--serif);font-size:17px;font-weight:900;color:var(--paper);background:linear-gradient(135deg,var(--red-deep),var(--red));padding:5px 14px;border-radius:3px;letter-spacing:1px}
+.mn-place{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink)}
+.mn-event{font-family:var(--serif);font-size:15px;font-weight:900;color:var(--gold);background:rgba(212,168,67,.18);padding:5px 14px;border-radius:3px;letter-spacing:1px}
+.mn-task{font-size:15px;font-weight:700;color:var(--red-deep);margin-bottom:8px;font-family:var(--serif);line-height:1.6}
+.mn-desc{font-size:14px;line-height:2;color:var(--ink-soft)}
+
+/* 金句 3D轮盘 */
+.wheel-wrap{position:relative;height:420px;perspective:1000px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wheel-item{position:absolute;font-family:var(--serif);font-size:18px;font-weight:700;color:var(--ink-mute);cursor:pointer;transition:all .5s cubic-bezier(.4,0,.2,1);white-space:nowrap;letter-spacing:2px}
+.wheel-item.active{font-size:26px;color:var(--red-deep);text-shadow:0 2px 14px rgba(178,34,34,.3);font-weight:900}
+.wheel-display{text-align:center;margin-top:16px;padding:28px 32px;background:var(--paper-dark);border-radius:8px;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.wheel-display .wd-text{font-family:var(--serif);font-size:17px;line-height:2.1;color:var(--ink);font-style:italic;max-width:560px}
+.wheel-display .wd-src{font-size:13px;color:var(--ink-mute);margin-top:10px;font-family:var(--serif)}
+.wheel-hint{text-align:center;font-size:12px;color:var(--ink-mute);margin-top:12px;letter-spacing:1px}
+
+/* CircularGallery 红岩目录 */
+.cg-wrap{position:relative;width:100%;height:480px;perspective:1400px;display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none}
+.cg-wrap:active{cursor:grabbing}
+.cg-ring{position:relative;width:180px;height:180px;transform-style:preserve-3d}
+.cg-card{position:absolute;top:50%;left:50%;width:150px;height:210px;margin:-105px 0 0 -75px;background:linear-gradient(160deg,#8B1A1A 0%,#5C0A0A 55%,#2D0505 100%);border:1px solid rgba(212,168,67,.45);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 12px 40px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08);padding:14px;text-align:center;transition:box-shadow .3s;cursor:pointer}
+.cg-card::before{content:'';position:absolute;inset:6px;border:1px solid rgba(212,168,67,.2);border-radius:2px;pointer-events:none}
+.cg-card .cg-num{font-family:var(--serif);font-size:11px;color:var(--gold);opacity:.7;letter-spacing:3px;margin-bottom:10px}
+.cg-card .cg-name{font-family:var(--serif);font-size:19px;font-weight:900;color:var(--gold-light);letter-spacing:3px;line-height:1.4;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.cg-card .cg-en{font-size:8px;color:rgba(240,208,128,.45);letter-spacing:1px;margin-top:8px}
+.cg-card .cg-icon{width:24px;height:24px;fill:var(--gold);opacity:.5;margin-top:10px}
+.cg-center{display:none}
+.cg-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ink-mute);letter-spacing:1px;white-space:nowrap}
+
+/* 红岩狱中档案 */
+.prison-archive{background:linear-gradient(135deg,#2a1a1a,#1a0f0f);border-radius:8px;padding:28px 32px;position:relative;overflow:hidden;border:1px solid rgba(139,26,26,.4)}
+.prison-archive::before{content:'绝 密';position:absolute;top:16px;right:20px;font-family:var(--serif);font-size:14px;font-weight:900;color:rgba(220,20,60,.4);border:2px solid rgba(220,20,60,.3);padding:3px 12px;transform:rotate(8deg);letter-spacing:4px}
+.pa-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px dashed rgba(212,168,67,.3)}
+.pa-stamp{width:60px;height:60px;border:3px solid rgba(220,20,60,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:11px;font-weight:900;color:rgba(220,20,60,.6);text-align:center;line-height:1.2;transform:rotate(-12deg)}
+.pa-title{font-family:var(--serif);font-size:22px;font-weight:900;color:var(--gold-light);letter-spacing:4px}
+.pa-sub{font-size:12px;color:rgba(212,168,67,.5);letter-spacing:2px;margin-top:4px}
+.pa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.pa-cell{background:rgba(0,0,0,.25);padding:12px 16px;border-radius:4px;border-left:3px solid rgba(220,20,60,.6)}
+.pa-cell .k{font-size:11px;color:rgba(212,168,67,.7);font-weight:700;letter-spacing:1px;margin-bottom:4px;font-family:var(--serif)}
+.pa-cell .v{font-size:14px;color:#e8dcc8;line-height:1.6}
+.pa-section{margin-bottom:16px}
+.pa-section h4{font-family:var(--serif);font-size:15px;font-weight:900;color:var(--gold);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,168,67,.2);display:inline-block}
+.pa-section p{font-size:14px;line-height:2;color:#d4c8b0}
+
+/* 红岩狱中笔记时间轴 */
+.prison-timeline{position:relative;padding-left:40px}
+.prison-timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--red),rgba(178,34,34,.2))}
+.pt-item{position:relative;margin-bottom:24px;background:var(--paper-dark);border-radius:6px;padding:18px 22px;border-left:4px solid var(--red);transition:transform .2s}
+.pt-item:hover{transform:translateX(4px)}
+.pt-item::before{content:'';position:absolute;left:-32px;top:22px;width:14px;height:14px;background:var(--red);border-radius:50%;border:3px solid var(--paper);box-shadow:0 0 0 2px var(--red)}
+.pt-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.pt-time{font-family:var(--serif);font-size:14px;font-weight:900;color:var(--paper);background:linear-gradient(135deg,var(--red-deep),var(--red));padding:4px 12px;border-radius:3px}
+.pt-place{font-size:13px;font-weight:700;color:var(--ink)}
+.pt-event{font-size:13px;font-weight:900;color:var(--gold);background:rgba(212,168,67,.15);padding:4px 12px;border-radius:3px}
+.pt-task{font-size:14px;font-weight:700;color:var(--red-deep);margin-bottom:8px;font-family:var(--serif)}
+.pt-desc{font-size:14px;line-height:2;color:var(--ink-soft)}
+
+/* 红岩烈士遗书 */
+.martyr-letters{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.letter-card{background:linear-gradient(135deg,#f5efe0,#e8dec8);border-radius:4px;padding:24px;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.15);cursor:pointer;transition:all .3s;min-height:240px;display:flex;flex-direction:column}
+.letter-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.letter-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--red-deep),var(--red),var(--gold))}
+.letter-name{font-family:var(--serif);font-size:20px;font-weight:900;color:var(--red-deep);margin-bottom:4px}
+.letter-role{font-size:12px;color:var(--ink-mute);margin-bottom:14px;font-family:var(--serif)}
+.letter-text{font-family:var(--serif);font-size:15px;line-height:2;color:var(--ink);font-style:italic;flex:1;display:flex;align-items:center}
+.letter-sign{font-size:13px;color:var(--ink-mute);text-align:right;margin-top:14px;font-family:var(--serif)}
+.letter-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.letter-tag{font-size:10px;padding:2px 8px;background:rgba(178,34,34,.1);color:var(--red-deep);border-radius:10px}
+
+/* 详细版烈士卡片 */
+.martyr-letters-rich{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.letter-card-rich{background:linear-gradient(135deg,#f5efe0,#e8dec8);border-radius:6px;padding:22px;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.12);transition:all .3s;min-height:320px;display:flex;flex-direction:column}
+.letter-card-rich:hover{transform:translateY(-4px);box-shadow:0 10px 32px rgba(0,0,0,.2)}
+.letter-card-rich::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--red-deep),var(--red),var(--gold))}
+.lcr-header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.lcr-avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--red-deep),var(--red));display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;font-weight:900;color:var(--gold-light);flex-shrink:0;box-shadow:0 3px 12px rgba(178,34,34,.35)}
+.lcr-name{font-family:var(--serif);font-size:20px;font-weight:900;color:var(--red-deep);line-height:1.2}
+.lcr-role{font-size:11px;color:var(--ink-mute);margin-top:3px;font-family:var(--serif)}
+.lcr-quote{font-family:var(--serif);font-size:15px;line-height:1.8;color:var(--red-deep);font-style:italic;padding:12px 16px;background:rgba(178,34,34,.06);border-left:3px solid var(--red);border-radius:0 4px 4px 0;margin-bottom:12px}
+.lcr-bio{font-size:13px;line-height:1.8;color:var(--ink-soft);margin-bottom:12px}
+.lcr-section-title{font-family:var(--serif);font-size:13px;font-weight:900;color:var(--red);margin-bottom:6px;padding-bottom:4px;border-bottom:1px dashed rgba(178,34,34,.2);display:inline-block}
+.lcr-deeds{margin-bottom:12px}
+.lcr-deeds ul{list-style:none;padding:0;margin:0}
+.lcr-deeds li{font-size:12px;line-height:1.7;color:var(--ink-soft);padding-left:18px;position:relative;margin-bottom:5px}
+.lcr-deeds li::before{content:'★';position:absolute;left:0;color:var(--gold);font-size:10px;top:2px}
+.lcr-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+
+/* 红岩信仰传递链 */
+.faith-chain{position:relative;padding:30px 0}
+.faith-node{display:flex;align-items:center;gap:20px;margin-bottom:16px;position:relative}
+.faith-node:last-child{margin-bottom:0}
+.faith-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--red-deep),var(--red));display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;font-weight:900;color:var(--gold-light);flex-shrink:0;box-shadow:0 4px 16px rgba(178,34,34,.4);position:relative;z-index:2}
+.faith-info{flex:1;background:var(--paper-dark);padding:14px 20px;border-radius:6px;border-left:4px solid var(--red)}
+.faith-info .fi-name{font-family:var(--serif);font-size:16px;font-weight:900;color:var(--red-deep);margin-bottom:4px}
+.faith-info .fi-desc{font-size:13px;line-height:1.8;color:var(--ink-soft)}
+.faith-arrow{position:absolute;left:31px;bottom:-16px;width:2px;height:16px;background:linear-gradient(180deg,var(--red),rgba(178,34,34,.3));z-index:1}
+.faith-arrow::after{content:'';position:absolute;bottom:-2px;left:-4px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--red)}
+
+/* 红岩密电考点 */
+.cipher-list{display:flex;flex-direction:column;gap:14px}
+.cipher-item{background:var(--paper-dark);border-radius:6px;padding:18px 22px;border:1px solid var(--paper-darker);position:relative;overflow:hidden}
+.cipher-item::before{content:'密电';position:absolute;top:8px;right:12px;font-size:10px;color:var(--red);opacity:.4;font-weight:900;letter-spacing:2px}
+.cipher-code{font-family:'Courier New',monospace;font-size:12px;color:var(--red);letter-spacing:2px;margin-bottom:8px;opacity:.6}
+.cipher-title{font-family:var(--serif);font-size:16px;font-weight:900;color:var(--red-deep);margin-bottom:8px}
+.cipher-content{font-size:14px;line-height:1.9;color:var(--ink-soft)}
+.cipher-tag{display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px}
+
+/* 红岩审讯真题 */
+.interrogation-quiz .quiz-item{background:linear-gradient(135deg,#2a1a1a,#1a0f0f);border-left:4px solid var(--red-light);border:1px solid rgba(139,26,26,.3)}
+.interrogation-quiz .q-text{color:#e8dcc8}
+.interrogation-quiz .quiz-opt{background:rgba(255,255,255,.05);border-color:rgba(212,168,67,.3);color:#c4b89c}
+.interrogation-quiz .quiz-opt:hover{border-color:var(--gold);background:rgba(212,168,67,.08)}
+.interrogation-quiz .quiz-answer{background:rgba(178,34,34,.15);border-left-color:var(--gold)}
+.interrogation-quiz .quiz-answer .ans-label{color:var(--gold)}
+.interrogation-quiz .quiz-num{color:var(--gold-light)}
+.interrogation-quiz .quiz-source{color:var(--gold);background:rgba(212,168,67,.12)}
+
+@media(max-width:768px){
+  .shelf-area{gap:30px;padding:24px 16px 0;min-height:300px}
+  .book{width:130px;height:200px}
+  .book-redstar .cover-title{font-size:19px;letter-spacing:2px}
+  .book-redcrag .cover-title{font-size:24px;letter-spacing:5px}
+  .book-pages-right{width:10px;right:-10px}.book-pages-top{height:10px;top:-10px}
+  .mc-card{width:150px;height:220px}
+  .mc-card .mc-name{font-size:17px}
+  .detail-header{padding:14px 16px 12px}
+  .detail-header .dh-title{font-size:17px}
+  .detail-body{padding:18px 16px}
+  .lm-top{grid-template-columns:repeat(2,1fr)}
+  .ls-wrap{flex-direction:column}
+  .ls-sidebar{width:100%;display:flex;overflow-x:auto;gap:0}
+  .ls-item{white-space:nowrap;padding:8px 14px}
+  .lantern{transform:scale(.7)}
+  .lantern.left{left:5%}.lantern.right{right:5%}
+  /* CircularGallery 移动端 */
+  .cg-wrap{height:360px}
+  .cg-card{width:115px;height:165px;margin:-82px 0 0 -57px;padding:10px}
+  .cg-card .cg-name{font-size:15px;letter-spacing:2px}
+  .cg-card .cg-num{font-size:10px;letter-spacing:2px}
+  .cg-card .cg-icon{width:20px;height:20px}
+  .cg-hint{font-size:10px}
+  /* 狱中档案 移动端 */
+  .prison-archive{padding:18px 14px}
+  .prison-archive::before{font-size:11px;padding:2px 8px;top:10px;right:10px}
+  .pa-header{gap:10px;margin-bottom:14px;padding-bottom:12px}
+  .pa-stamp{width:46px;height:46px;font-size:9px}
+  .pa-title{font-size:18px;letter-spacing:3px}
+  .pa-sub{font-size:10px}
+  .pa-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .pa-cell{padding:10px 12px}
+  .pa-cell .v{font-size:13px}
+  .pa-section p{font-size:13px;line-height:1.9}
+  /* 狱中时间轴 移动端 */
+  .prison-timeline{padding-left:26px}
+  .prison-timeline::before{left:8px}
+  .pt-item{padding:14px 14px;margin-bottom:18px}
+  .pt-item::before{left:-22px;width:10px;height:10px;top:18px}
+  .pt-header{gap:6px}
+  .pt-time{font-size:11px;padding:3px 9px}
+  .pt-place,.pt-event{font-size:12px}
+  .pt-task{font-size:13px}
+  .pt-desc{font-size:13px;line-height:1.9}
+  /* 烈士卡片 移动端 */
+  .martyr-letters-rich{grid-template-columns:1fr;gap:14px}
+  .letter-card-rich{padding:16px 18px;min-height:auto}
+  .lcr-header{gap:10px;margin-bottom:10px}
+  .lcr-avatar{width:46px;height:46px;font-size:18px}
+  .lcr-name{font-size:18px}
+  .lcr-quote{font-size:14px;line-height:1.7;padding:10px 12px}
+  .lcr-bio{font-size:12px;line-height:1.8}
+  .lcr-deeds li{font-size:12px;line-height:1.7}
+  /* 信仰传递链 移动端 */
+  .faith-chain{padding:16px 0}
+  .faith-node{gap:12px;margin-bottom:14px}
+  .faith-avatar{width:46px;height:46px;font-size:18px}
+  .faith-arrow{left:21px;bottom:-14px;height:14px}
+  .faith-info{padding:12px 14px}
+  .faith-info .fi-name{font-size:14px}
+  .faith-info .fi-desc{font-size:12px;line-height:1.8}
+  /* 密电 移动端 */
+  .cipher-item{padding:14px 16px}
+  .cipher-code{font-size:10px}
+  .cipher-title{font-size:14px}
+  .cipher-content{font-size:13px;line-height:1.9}
+  /* 审讯真题 移动端 */
+  .interrogation-quiz .quiz-item{padding:14px 14px}
+  .interrogation-quiz .q-text{font-size:13px;line-height:1.8}
+  .interrogation-quiz .quiz-opt{font-size:12px;padding:7px 12px}
+  /* 移动端触摸动画 */
+  .letter-card-rich:active{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .pt-item:active{transform:translateX(3px)}
+  .cipher-item:active{transform:translateX(3px)}
+  .march-node:active{transform:translateX(3px)}
+}
+</style>
+</head>
+<body>
+
+<!-- 书店 -->
+<div class="scene" id="scene-store">
+  <div class="store-bg"></div><div class="store-floor"></div>
+
+  <div class="store-sign"><div class="store-sign-board"><h1>红色书屋</h1></div><p>RED STAR BOOKSTORE</p></div>
+  <div class="door-frame">
+    <div class="door-arch"></div>
+    <div class="door-container" id="doorContainer">
+      <div class="door-light"></div>
+      <div class="door-left" id="doorLeft"><div class="door-panel"></div><div class="door-panel"></div><div class="door-handle"></div></div>
+      <div class="door-right" id="doorRight"><div class="door-panel"></div><div class="door-panel"></div><div class="door-handle"></div></div>
+    </div>
+    <div class="enter-hint" id="enterBtn">推门进入<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+  </div>
+</div>
+
+<!-- 书架 -->
+<div class="scene hidden" id="scene-shelf">
+  <div class="shelf-room"></div>
+  <button class="back-btn" onclick="goStore()">&larr; 返回门口</button>
+  <div class="shelf-header"><h2>选 书 阁</h2><p>点击书籍开始阅读</p></div>
+  <div class="bookshelf">
+    <div class="shelf-board"></div>
+    <div class="shelf-area">
+      <div class="book-wrap">
+        <div class="book book-redstar" id="bookRedstar" onclick="openBook()">
+          <div class="book-cover">
+            <svg class="cover-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <div><div class="cover-title">红星照耀中国</div><div class="cover-line" style="margin-top:10px"></div><div class="cover-sub" style="margin-top:8px">RED STAR OVER CHINA</div></div>
+            <div><div class="cover-author">埃德加·斯诺 著</div><div class="cover-sub" style="margin-top:4px">人民教育出版社</div></div>
+          </div>
+          <div class="book-pages-right"></div><div class="book-pages-top"></div>
+          <div class="book-glare" id="glareRedstar"></div>
+        </div>
+      </div>
+      <div class="book-wrap">
+        <div class="book book-redcrag" id="bookRedcrag" onclick="openBook('redcrag')">
+          <div class="book-cover">
+            <svg class="cover-icon" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+            <div><div class="cover-title">红岩</div><div class="cover-line" style="margin-top:10px"></div><div class="cover-sub" style="margin-top:8px">RED CRAG</div></div>
+            <div><div class="cover-author">罗广斌 杨益言 著</div><div class="cover-sub" style="margin-top:4px">人民教育出版社</div></div>
+          </div>
+          <div class="book-pages-right"></div><div class="book-pages-top"></div>
+          <div class="book-glare" id="glareRedcrag"></div>
+        </div>
+      </div>
+    </div>
+    <div class="shelf-board"></div>
+  </div>
+</div>
+
+<!-- 阅读 -->
+<div class="scene hidden" id="scene-reader">
+  <div class="reader-outer">
+    <button class="reader-close-btn" onclick="closeBook()">&larr; 放回书架</button>
+
+    <!-- 目录 DepthCarousel -->
+    <div class="reader-menu" id="readerMenu">
+      <button class="menu-back" onclick="closeBook()">&larr; 放回书架</button>
+      <div class="menu-title">红星照耀中国</div>
+      <div class="menu-subtitle">选 择 章 节 阅 读</div>
+      <div class="carousel-wrap" id="menuCarousel">
+        <button class="mc-nav prev" id="mcPrev" onclick="mcNav(-1)">&#8249;</button>
+        <button class="mc-nav next" id="mcNext" onclick="mcNav(1)">&#8250;</button>
+      </div>
+      <div class="cg-wrap" id="cgWrap" style="display:none">
+        <div class="cg-ring" id="cgRing"></div>
+        <div class="cg-center"><div class="cg-title" id="cgCenterTitle">书籍档案</div><div class="cg-sub">拖动旋转 · 点击进入</div></div>
+        <div class="cg-hint">按住拖动 / 滚轮切换</div>
+      </div>
+    </div>
+
+    <!-- 详情 -->
+    <div class="reader-detail" id="readerDetail">
+      <div class="detail-header">
+        <div class="dh-left"><span class="dh-num" id="detailNum">第壹章</span><span class="dh-title" id="detailTitle">书籍档案</span></div>
+        <div class="dh-nav">
+          <button id="prevDetail" onclick="navDetail(-1)">&#8249;</button>
+          <button onclick="backToMenu()">&#9776;</button>
+          <button id="nextDetail" onclick="navDetail(1)">&#8250;</button>
+        </div>
+      </div>
+      <div class="detail-body" id="detailBody"></div>
+      <div class="detail-footer"><span>红星照耀中国 · 名著阅读课程化丛书</span><span id="detailPage">1 / 8</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 头像放大弹窗 -->
+<div class="avatar-modal" id="avatarModal" onclick="this.classList.remove('show')">
+  <img id="avatarModalImg" src="" alt="">
+</div>
+
+<script>
+// 场景切换
+const sceneStore=document.getElementById('scene-store'),sceneShelf=document.getElementById('scene-shelf'),sceneReader=document.getElementById('scene-reader');
+function goShelf(){document.getElementById('doorLeft').classList.add('open');document.getElementById('doorRight').classList.add('open');document.getElementById('doorContainer').classList.add('open');setTimeout(()=>{sceneStore.classList.add('hidden');sceneShelf.classList.remove('hidden')},1200)}
+function goStore(){sceneShelf.classList.add('hidden');sceneStore.classList.remove('hidden');document.getElementById('doorLeft').classList.remove('open');document.getElementById('doorRight').classList.remove('open');document.getElementById('doorContainer').classList.remove('open')}
+document.getElementById('enterBtn').addEventListener('click',goShelf);
+document.getElementById('doorContainer').addEventListener('click',goShelf);
+
+// Glare
+function setupGlare(el,gl){el.addEventListener('mousemove',e=>{const r=el.getBoundingClientRect();gl.style.background=`radial-gradient(circle at ${(e.clientX-r.left)/r.width*100}% ${(e.clientY-r.top)/r.height*100}%,rgba(255,255,255,.4) 0%,rgba(255,255,255,.12) 28%,transparent 55%)`});el.addEventListener('mouseleave',()=>gl.style.opacity='0');el.addEventListener('mouseenter',()=>gl.style.opacity='1')}
+setupGlare(document.getElementById('bookRedstar'),document.getElementById('glareRedstar'));
+setupGlare(document.getElementById('bookRedcrag'),document.getElementById('glareRedcrag'));
+
+// 打开书
+function openBook(book){currentBook=book||'redstar';const bookId=currentBook==='redcrag'?'bookRedcrag':'bookRedstar';const b=document.getElementById(bookId);const r=b.getBoundingClientRect();b.style.position='fixed';b.style.left=r.left+'px';b.style.top=r.top+'px';b.style.zIndex='100';b.style.transition='all .7s cubic-bezier(.4,0,.2,1)';requestAnimationFrame(()=>{b.style.left='50%';b.style.top='50%';b.style.transform='translate(-50%,-50%) scale(1.4) rotateY(180deg)';b.style.opacity='0'});setTimeout(()=>{sceneShelf.classList.add('hidden');sceneReader.classList.remove('hidden');b.style.position='';b.style.left='';b.style.top='';b.style.transform='';b.style.opacity='';b.style.zIndex='';b.style.transition='';initMenu()},700)}
+function closeBook(){sceneReader.classList.add('hidden');sceneShelf.classList.remove('hidden');document.getElementById('readerMenu').classList.remove('hidden');document.getElementById('readerDetail').classList.remove('show')}
+function showLocked(){const b=document.getElementById('bookRedcrag');b.style.animation='none';b.offsetHeight;b.style.animation='shake .4s ease'}
+const ss=document.createElement('style');ss.textContent='@keyframes shake{0%,100%{transform:rotateY(-18deg) rotateX(3deg)}25%{transform:rotateY(-18deg) rotateX(3deg) translateX(-8px)}75%{transform:rotateY(-18deg) rotateX(3deg) translateX(8px)}}';document.head.appendChild(ss);
+
+// ===== 章节数据 =====
+let currentBook='redstar';
+const chapters=[
+  {num:'壹',name:'书籍档案',en:'BOOK ARCHIVE'},
+  {num:'贰',name:'内容概览',en:'CONTENTS'},
+  {num:'叁',name:'长征史诗',en:'LONG MARCH'},
+  {num:'肆',name:'人物档案',en:'PROFILES'},
+  {num:'伍',name:'关系图谱',en:'RELATIONS'},
+  {num:'陆',name:'考点梳理',en:'EXAM TIPS'},
+  {num:'柒',name:'真题演练',en:'PRACTICE'},
+  {num:'捌',name:'金句摘抄',en:'QUOTES'}
+];
+
+// 目录轮播
+let mcIndex=0;
+function initMenu(){
+  mcIndex=0;cgAngle=0;
+  const isRedcrag=currentBook==='redcrag';
+  const ch=isRedcrag?redcragChapters:chapters;
+  document.querySelector('.menu-title').style.display=isRedcrag?'none':'block';
+  document.querySelector('.menu-subtitle').style.display=isRedcrag?'none':'block';
+  document.getElementById('menuCarousel').style.display=isRedcrag?'none':'block';
+  document.getElementById('cgWrap').style.display=isRedcrag?'flex':'none';
+  if(!isRedcrag){
+    document.querySelector('.menu-title').textContent='红星照耀中国';
+    const wrap=document.getElementById('menuCarousel');
+    wrap.querySelectorAll('.mc-card').forEach(c=>c.remove());
+    ch.forEach((c,i)=>{
+      const card=document.createElement('div');
+      card.className='mc-card';
+      card.innerHTML=`<div class="mc-num">第${c.num}章</div><div class="mc-name">${c.name}</div><div class="mc-en">${c.en}</div><svg class="mc-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+      card.onclick=()=>openDetail(i);
+      wrap.appendChild(card);
+    });
+    updateMenuCarousel();
+  }else{
+    initCircularGallery();
+  }
+}
+function updateMenuCarousel(){
+  const cards=document.querySelectorAll('.mc-card');
+  const total=cards.length;
+  cards.forEach((card,i)=>{
+    let offset=i-mcIndex;
+    if(offset>total/2)offset-=total;
+    if(offset<-total/2)offset+=total;
+    const abs=Math.abs(offset);
+    if(abs>3){card.style.opacity='0';card.style.pointerEvents='none';card.style.transform='translateX(0)';return}
+    const dir=offset===0?0:offset>0?1:-1;
+    const tx=offset*160;
+    const tz=-abs*120;
+    const ry=-dir*20;
+    const scale=1-abs*0.1;
+    card.style.transform=`translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${scale})`;
+    card.style.opacity=Math.max(0.2,1-abs*0.25);
+    card.style.filter=`blur(${Math.min(4,abs*1.5)}px)`;
+    card.style.zIndex=100-abs;
+    card.style.pointerEvents=abs===0?'auto':'none';
+  });
+  document.getElementById('mcPrev').disabled=mcIndex===0;
+  document.getElementById('mcNext').disabled=mcIndex===chapters.length-1;
+}
+function mcNav(d){mcIndex=Math.max(0,Math.min(chapters.length-1,mcIndex+d));updateMenuCarousel()}
+
+// 详情
+let currentChapter=0;
+function openDetail(i){currentChapter=i;renderDetail();document.getElementById('readerMenu').classList.add('hidden');document.getElementById('readerDetail').classList.add('show')}
+function backToMenu(){document.getElementById('readerDetail').classList.remove('show');document.getElementById('readerMenu').classList.remove('hidden')}
+function navDetail(d){const n=currentChapter+d;if(n>=0&&n<chapters.length){currentChapter=n;renderDetail()}}
+function renderDetail(){
+  const ch=currentBook==='redcrag'?redcragChapters:chapters;
+  const content=currentBook==='redcrag'?redcragChapterContent:chapterContent;
+  const c=ch[currentChapter];
+  document.getElementById('detailNum').textContent='第'+c.num+'章';
+  document.getElementById('detailTitle').textContent=c.name;
+  document.getElementById('detailPage').textContent=(currentChapter+1)+' / '+ch.length;
+  document.getElementById('prevDetail').disabled=currentChapter===0;
+  document.getElementById('nextDetail').disabled=currentChapter===ch.length-1;
+  document.getElementById('detailBody').innerHTML=content[currentChapter]();
+  document.getElementById('detailBody').scrollTop=0;
+  document.querySelector('.detail-footer span:first-child').textContent=(currentBook==='redcrag'?'红岩':'红星照耀中国')+' · 名著阅读课程化丛书';
+  if(currentChapter===1&&currentBook==='redstar')initLineSidebar();
+  if(currentChapter===2&&currentBook==='redstar')initMap();
+  if(currentChapter===3&&currentBook==='redstar')initWechat();
+  if(currentChapter===6)initQuiz();
+  if(currentChapter===7)initWheel();
+}
+
+// ===== 各章内容 =====
+const chapterContent=[
+// 0 书籍档案
+()=>`
+  <div class="cb-grid">
+    <div class="cb-cell"><div class="k">书名</div><div class="v">《红星照耀中国》<br>Red Star Over China</div></div>
+    <div class="cb-cell"><div class="k">又名</div><div class="v">《西行漫记》</div></div>
+    <div class="cb-cell"><div class="k">作者</div><div class="v">埃德加·斯诺（美）</div></div>
+    <div class="cb-cell"><div class="k">译者</div><div class="v">胡愈之 等</div></div>
+    <div class="cb-cell"><div class="k">出版社</div><div class="v">人民教育出版社</div></div>
+    <div class="cb-cell"><div class="k">丛书</div><div class="v">名著阅读课程化丛书</div></div>
+    <div class="cb-cell"><div class="k">首版</div><div class="v">1937年10月（伦敦）</div></div>
+    <div class="cb-cell"><div class="k">体裁</div><div class="v">纪实文学</div></div>
+    <div class="cb-cell"><div class="k">采访时间</div><div class="v">1936.6—1936.10</div></div>
+    <div class="cb-cell"><div class="k">采访地点</div><div class="v">陕北革命根据地</div></div>
+  </div>
+  <div class="cb-h">内容简介</div>
+  <p class="cb-p">美国记者埃德加·斯诺于1936年冒着生命危险，冲破国民党的新闻封锁，深入陕北革命根据地进行实地采访。在四个多月里，他与红军战士同吃同住，走访乡村、深入军营，采访了毛泽东、周恩来、彭德怀等众多共产党和红军领导人。本书真实记录了他的所见所闻，向全世界第一次客观报道了中国共产党和中国工农红军的真实情况。</p>
+  <div class="cb-h">"红星"的含义</div>
+  <p class="cb-p">"红星"指代中国共产党及其领导的红色革命事业。书名寓意：中国共产党及其领导的革命事业犹如一颗闪亮的红星，不仅照耀着中国的西北，而且必将照耀全中国，照耀全世界。</p>
+`,
+// 1 内容概览 - LineSidebar
+()=>`
+  <div class="ls-wrap">
+    <div class="ls-sidebar" id="lsSidebar">
+      <div class="ls-marker" id="lsMarker"></div>
+    </div>
+    <div class="ls-content" id="lsContent"></div>
+  </div>
+`,
+// 2 长征史诗
+()=>`
+  <div class="lm-top">
+    <div class="lm-stat"><div class="n">18</div><div class="u">座山脉</div><div class="de">翻越</div></div>
+    <div class="lm-stat"><div class="n">24</div><div class="u">条河流</div><div class="de">渡过</div></div>
+    <div class="lm-stat"><div class="n">12</div><div class="u">个省份</div><div class="de">经过</div></div>
+    <div class="lm-stat"><div class="n">62</div><div class="u">座城市</div><div class="de">占领</div></div>
+    <div class="lm-stat"><div class="n">10</div><div class="u">股军阀</div><div class="de">突破</div></div>
+    <div class="lm-stat"><div class="n">25000</div><div class="u">里</div><div class="de">总行程</div></div>
+  </div>
+  <div class="cb-h">长征路线图（点击地点查看详情）</div>
+  <div class="map-wrap" id="mapWrap">
+    <svg class="map-svg" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="mapBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8DEC8"/><stop offset="1" stop-color="#D8CCB4"/></linearGradient></defs>
+      <rect width="700" height="420" fill="url(#mapBg)" rx="4"/>
+      <path d="M580,280 Q520,260 480,240 Q440,220 420,200 Q400,180 380,170 Q360,160 340,155 Q320,150 300,145 Q280,140 260,130 Q240,120 220,110 Q200,100 180,90 Q160,80 140,75 Q120,70 100,65 Q80,60 60,55" fill="none" stroke="#B22222" stroke-width="3" stroke-dasharray="8,4" opacity="0.7"/>
+      <g class="map-point" data-idx="0" onclick="showMapPoint(0,event)"><circle cx="580" cy="280" r="6" fill="#B22222"/><text x="580" y="300" text-anchor="middle" font-size="11" fill="#333" font-family="Noto Serif SC">瑞金</text></g>
+      <g class="map-point" data-idx="1" onclick="showMapPoint(1,event)"><circle cx="480" cy="240" r="6" fill="#B22222"/><text x="480" y="260" text-anchor="middle" font-size="11" fill="#333" font-family="Noto Serif SC">湘江</text></g>
+      <g class="map-point" data-idx="2" onclick="showMapPoint(2,event)"><circle cx="380" cy="170" r="6" fill="#B22222"/><text x="380" y="190" text-anchor="middle" font-size="11" fill="#333" font-family="Noto Serif SC">遵义</text></g>
+      <g class="map-point" data-idx="3" onclick="showMapPoint(3,event)"><circle cx="300" cy="145" r="6" fill="#B22222"/><text x="300" y="130" text-anchor="middle" font-size="11" fill="#333" font-family="Noto Serif SC">金沙江</text></g>
+      <g class="map-point" data-idx="4" onclick="showMapPoint(4,event)"><circle cx="240" cy="120" r="6" fill="#B22222"/><text x="240" y="105" text-anchor="middle" font-size="11" fill="#333" font-family="Noto Serif SC">大渡河</text></g>
+      <g class="map-point" data-idx="5" onclick="showMapPoint(5,event)"><circle cx="170" cy="85" r="6" fill="#B22222"/><text x="170" y="70" text-anchor="middle" font-size="11" fill="#333" font-family="Noto Serif SC">雪山</text></g>
+      <g class="map-point" data-idx="6" onclick="showMapPoint(6,event)"><circle cx="110" cy="60" r="6" fill="#B22222"/><text x="110" y="45" text-anchor="middle" font-size="11" fill="#333" font-family="Noto Serif SC">草地</text></g>
+      <g class="map-point" data-idx="7" onclick="showMapPoint(7,event)"><circle cx="55" cy="50" r="8" fill="#D4A843" stroke="#B22222" stroke-width="2"/><text x="55" y="35" text-anchor="middle" font-size="12" fill="#8B0000" font-weight="900" font-family="Noto Serif SC">陕北</text></g>
+    </svg>
+    <div class="map-popup" id="mapPopup"><button class="mp-close" onclick="document.getElementById('mapPopup').classList.remove('show')">&times;</button><h5 id="mpTitle"></h5><div class="mp-time" id="mpTime"></div><p id="mpDesc"></p></div>
+  </div>
+  <div class="cb-h">长征关键节点</div>
+  <div class="march-nodes">
+    <div class="march-node">
+      <div class="mn-header"><span class="mn-time">1934.10</span><span class="mn-place">江西瑞金</span><span class="mn-event">战略转移</span></div>
+      <div class="mn-task">任务：突破国民党第五次"围剿"，保存红军有生力量，实行战略大转移</div>
+      <div class="mn-desc">由于博古、李德等人"左"倾错误指挥，第五次反"围剿"失败。1934年10月，中央红军八万六千余人从江西瑞金、于都等地出发，被迫撤离中央革命根据地，开始了举世闻名的二万五千里长征。</div>
+    </div>
+    <div class="march-node">
+      <div class="mn-header"><span class="mn-time">1934.11</span><span class="mn-place">广西全州</span><span class="mn-event">血战湘江</span></div>
+      <div class="mn-task">任务：突破国民党军第四道封锁线，强渡湘江</div>
+      <div class="mn-desc">红军在湘江两岸与国民党军激战五昼夜，以惨重代价突破第四道封锁线。红军从出发时的八万六千余人锐减至三万余人，这是长征中最惨烈的一战，也促使全党全军反思错误军事路线。</div>
+    </div>
+    <div class="march-node">
+      <div class="mn-header"><span class="mn-time">1935.01</span><span class="mn-place">贵州遵义</span><span class="mn-event">遵义会议</span></div>
+      <div class="mn-task">任务：纠正"左"倾军事错误，确立新的党中央领导核心</div>
+      <div class="mn-desc">中共中央在遵义召开政治局扩大会议，集中全力解决了当时具有决定意义的军事和组织问题，确立了毛泽东在党和红军中的领导地位。遵义会议是中国共产党历史上一个生死攸关的转折点，标志着党从幼年走向成熟。</div>
+    </div>
+    <div class="march-node">
+      <div class="mn-header"><span class="mn-time">1935.05</span><span class="mn-place">川滇边界</span><span class="mn-event">突出重围</span></div>
+      <div class="mn-task">任务：巧渡金沙江、强渡大渡河，跳出国民党军包围圈</div>
+      <div class="mn-desc">遵义会议后，红军四渡赤水、巧渡金沙江，完全跳出了数十万敌军的围追堵截。随后强渡大渡河、飞夺泸定桥——22名勇士冒着枪林弹雨攀着铁索冲锋，创造了战争史上的奇迹，打开了北上抗日的通道。</div>
+    </div>
+    <div class="march-node">
+      <div class="mn-header"><span class="mn-time">1935.06—08</span><span class="mn-place">川西北</span><span class="mn-event">征服极限</span></div>
+      <div class="mn-task">任务：翻越夹金山等大雪山，穿越松潘草地，挑战人类生存极限</div>
+      <div class="mn-desc">红军翻越海拔4000多米的夹金山等多座大雪山，克服严寒、缺氧和饥饿。随后穿越松潘大草地，沼泽遍布、粮食匮乏，战士们吃草根、煮皮带，许多人长眠于雪山草地之间，展现了惊人的革命毅力。</div>
+    </div>
+    <div class="march-node">
+      <div class="mn-header"><span class="mn-time">1935.10</span><span class="mn-place">陕北吴起镇</span><span class="mn-event">胜利会师</span></div>
+      <div class="mn-task">任务：与陕北红军胜利会师，结束长征，开创革命新局面</div>
+      <div class="mn-desc">中央红军到达陕北吴起镇，与刘志丹领导的陕北红军胜利会师。历时一年、纵横十一省、行程二万五千里的长征胜利结束。长征的胜利，是中国革命转危为安的关键，中国革命的新局面由此开启。</div>
+    </div>
+  </div>
+  <div class="cb-h">长征精神</div>
+  <p class="cb-p">长征是人类历史上的伟大奇迹。红军战士在极端恶劣的自然环境和敌人的围追堵截中，展现出不怕牺牲、敢于胜利的革命乐观主义精神，以及顾全大局、严守纪律、亲密团结的高尚品德。长征精神已成为中华民族宝贵的精神财富。</p>
+`,
+// 3 人物档案 - 微信主页
+()=>`<div id="wechatWrap"></div>`,
+// 4 关系图谱
+()=>`
+  <div class="rel-wrap">
+    <svg class="rel-svg" viewBox="0 0 700 500" xmlns="http://www.w3.org/2000/svg">
+      <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <line x1="350" y1="80" x2="160" y2="200" stroke="#B22222" stroke-width="2.5" class="rel-line"/>
+      <line x1="350" y1="80" x2="540" y2="200" stroke="#B22222" stroke-width="2.5" class="rel-line"/>
+      <line x1="350" y1="80" x2="350" y2="230" stroke="#B22222" stroke-width="2.5" class="rel-line"/>
+      <line x1="350" y1="80" x2="100" y2="350" stroke="#D4A843" stroke-width="2" stroke-dasharray="6,3" class="rel-line"/>
+      <line x1="350" y1="80" x2="600" y2="350" stroke="#D4A843" stroke-width="2" stroke-dasharray="6,3" class="rel-line"/>
+      <line x1="160" y1="200" x2="250" y2="350" stroke="#999" stroke-width="1.5" class="rel-line"/>
+      <line x1="160" y1="200" x2="100" y2="350" stroke="#999" stroke-width="1.5" class="rel-line"/>
+      <line x1="540" y1="200" x2="450" y2="350" stroke="#999" stroke-width="1.5" class="rel-line"/>
+      <line x1="540" y1="200" x2="600" y2="350" stroke="#999" stroke-width="1.5" class="rel-line"/>
+      <line x1="650" y1="80" x2="395" y2="80" stroke="#999" stroke-width="1.5" stroke-dasharray="5,3" class="rel-line"/>
+      <text x="250" y="135" font-size="10" fill="#B22222" font-family="Noto Serif SC">核心领导</text>
+      <text x="430" y="155" font-size="10" fill="#999" font-family="Noto Serif SC">协作</text>
+      <g class="rel-node"><circle cx="350" cy="80" r="38" fill="#B22222" filter="url(#glow)"/><text x="350" y="76" text-anchor="middle" fill="#F5EFE0" font-family="Noto Serif SC" font-size="14" font-weight="900">毛泽东</text><text x="350" y="92" text-anchor="middle" fill="#F0D080" font-size="9">苏维埃主席</text></g>
+      <g class="rel-node"><circle cx="160" cy="200" r="32" fill="#8B0000"/><text x="160" y="196" text-anchor="middle" fill="#F5EFE0" font-family="Noto Serif SC" font-size="13" font-weight="700">周恩来</text><text x="160" y="210" text-anchor="middle" fill="#F0D080" font-size="9">总政委</text></g>
+      <g class="rel-node"><circle cx="540" cy="200" r="32" fill="#8B0000"/><text x="540" y="196" text-anchor="middle" fill="#F5EFE0" font-family="Noto Serif SC" font-size="13" font-weight="700">朱德</text><text x="540" y="210" text-anchor="middle" fill="#F0D080" font-size="9">总司令</text></g>
+      <g class="rel-node"><circle cx="350" cy="250" r="30" fill="#DC143C"/><text x="350" y="246" text-anchor="middle" fill="#F5EFE0" font-family="Noto Serif SC" font-size="12" font-weight="700">彭德怀</text><text x="350" y="260" text-anchor="middle" fill="#F0D080" font-size="9">红一方面军</text></g>
+      <g class="rel-node"><circle cx="100" cy="350" r="26" fill="#A52A2A"/><text x="100" y="346" text-anchor="middle" fill="#F5EFE0" font-family="Noto Serif SC" font-size="11" font-weight="700">贺龙</text><text x="100" y="360" text-anchor="middle" fill="#F0D080" font-size="8">红二方面军</text></g>
+      <g class="rel-node"><circle cx="250" cy="350" r="26" fill="#A52A2A"/><text x="250" y="346" text-anchor="middle" fill="#F5EFE0" font-family="Noto Serif SC" font-size="11" font-weight="700">徐海东</text><text x="250" y="360" text-anchor="middle" fill="#F0D080" font-size="8">红十五军团</text></g>
+      <g class="rel-node"><circle cx="450" cy="350" r="26" fill="#A52A2A"/><text x="450" y="346" text-anchor="middle" fill="#F5EFE0" font-family="Noto Serif SC" font-size="11" font-weight="700">刘志丹</text><text x="450" y="360" text-anchor="middle" fill="#F0D080" font-size="8">西北苏区</text></g>
+      <g class="rel-node"><circle cx="600" cy="350" r="26" fill="#D4A843"/><text x="600" y="346" text-anchor="middle" fill="#fff" font-family="Noto Serif SC" font-size="11" font-weight="700">红小鬼</text><text x="600" y="360" text-anchor="middle" fill="#fff" font-size="8">少年红军</text></g>
+      <g class="rel-node"><circle cx="650" cy="80" r="24" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="4,3"/><text x="650" y="76" text-anchor="middle" fill="#999" font-family="Noto Serif SC" font-size="11" font-weight="700">斯诺</text><text x="650" y="90" text-anchor="middle" fill="#999" font-size="8">作者</text></g>
+      <text x="350" y="470" text-anchor="middle" font-size="11" fill="#666" font-family="Noto Serif SC">中国工农红军领导体系 · 1936年陕北</text>
+    </svg>
+  </div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;justify-content:center;font-size:12px;color:var(--ink-mute)">
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:3px;background:#B22222"></span>核心领导关系</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:2px;background:#D4A843"></span>间接关联</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:2px;background:#999"></span>协作/隶属</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:2px;border-top:2px dashed #999"></span>采访/观察</span>
+  </div>
+`,
+// 5 考点
+()=>`
+  <div class="cb-card" style="padding:16px 20px;background:var(--paper-dark);border-radius:6px;margin-bottom:12px;border-left:4px solid var(--red)"><h5 style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px">名著常识</h5><p style="font-size:13px;line-height:1.9;color:var(--ink-soft)">《红星照耀中国》又名《西行漫记》，作者美国记者埃德加·斯诺，1936年深入陕北采访，1937年伦敦首版，全书十二篇，纪实文学体裁。人教版为"名著阅读课程化丛书"。</p><span style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px">常考：填空、选择</span></div>
+  <div class="cb-card" style="padding:16px 20px;background:var(--paper-dark);border-radius:6px;margin-bottom:12px;border-left:4px solid var(--red)"><h5 style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px">人物形象分析公式</h5><p style="font-size:13px;line-height:1.9;color:var(--ink-soft)"><strong style="color:var(--red)">人物身份 + 典型事件 + 性格特点 + 精神品质</strong>。如毛泽东：革命领袖+与战士同吃同住+平易近人生活简朴+卓越军事政治才能。</p><span style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px">答题模板必背</span></div>
+  <div class="cb-card" style="padding:16px 20px;background:var(--paper-dark);border-radius:6px;margin-bottom:12px;border-left:4px solid var(--red)"><h5 style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px">高频人物关键词</h5><p style="font-size:13px;line-height:1.9;color:var(--ink-soft)">毛泽东——面容瘦削像林肯、博览群书；周恩来——清瘦、温文尔雅、英语好；彭德怀——活泼爱笑、棉衣给小号手；贺龙——爱马、菜刀革命；徐海东——窑工出身、九次负伤；红小鬼——朝气蓬勃、纪律严明。</p><span style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px">关键词判人物</span></div>
+  <div class="cb-card" style="padding:16px 20px;background:var(--paper-dark);border-radius:6px;margin-bottom:12px;border-left:4px solid var(--red)"><h5 style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px">长征关键数据</h5><p style="font-size:13px;line-height:1.9;color:var(--ink-soft)">爬过18座山脉，渡过24条河流，经过12个省份，占领62座城市，突破10股军阀包围，穿过6个少数民族地区，总行程约二万五千里。</p><span style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px">高频填空题</span></div>
+  <div class="cb-card" style="padding:16px 20px;background:var(--paper-dark);border-radius:6px;margin-bottom:12px;border-left:4px solid var(--red)"><h5 style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px">红小鬼的作用</h5><p style="font-size:13px;line-height:1.9;color:var(--ink-soft)">象征革命新生力量和未来希望；侧面展现苏区平等自由、重视教育的社会环境；以少年视角打破外界对红军的刻板偏见；丰富人物群像。</p><span style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px">作用分析题</span></div>
+  <div class="cb-card" style="padding:16px 20px;background:var(--paper-dark);border-radius:6px;margin-bottom:12px;border-left:4px solid var(--red)"><h5 style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px">纪实文学特点</h5><p style="font-size:13px;line-height:1.9;color:var(--ink-soft)">真实性（实地采访）、文学性（生动描写与人物刻画）、客观性（外国记者中立视角）。叙事以斯诺采访行程为线索，时间顺序与专题板块纵横交错。</p><span style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px">文体特征</span></div>
+  <div class="cb-card" style="padding:16px 20px;background:var(--paper-dark);border-radius:6px;margin-bottom:12px;border-left:4px solid var(--red)"><h5 style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red-deep);margin-bottom:6px">主题思想</h5><p style="font-size:13px;line-height:1.9;color:var(--ink-soft)">真实展现中国共产党和红军为民族解放艰苦奋斗的崇高精神，揭示"红星照耀中国"的历史必然，歌颂红军战士不怕牺牲、坚韧不拔的革命乐观主义精神。</p><span style="display:inline-block;margin-top:8px;font-size:11px;color:var(--gold);font-weight:700;background:rgba(212,168,67,.1);padding:2px 10px;border-radius:2px">主题概括、读后感</span></div>
+`,
+// 6 真题
+()=>`
+  <div class="quiz-header">
+    <span style="font-family:var(--serif);font-size:14px;color:var(--ink-soft)">真题精选（每次5道）</span>
+    <button class="quiz-refresh" onclick="refreshQuiz()">&#8635; 换一批</button>
+  </div>
+  <div id="quizList"></div>
+`,
+// 7 金句 OptionWheel
+()=>`
+  <div class="wheel-wrap" id="wheelWrap"></div>
+  <div class="wheel-display" id="wheelDisplay"><div class="wd-text">点击上方金句查看详情</div></div>
+  <div class="wheel-hint">点击金句切换 · 滚轮浏览（已调慢）</div>
+`
+];
+
+// ===== LineSidebar =====
+const lsChapters=[
+  {name:'第一篇 探寻红色的中国',time:'1936年6月',place:'北平→陕北',people:'斯诺、张学良、杨虎城',events:'斯诺对红色世界充满好奇，开始深入苏维埃红区的冒险。讲述张学良、杨虎城与共产党达成一致抗日协议的原因和经过，以及西安事变的背景。',points:['斯诺突破国民党封锁进入红区','东北军西北军与红军秘密停战','抗日民族统一战线的酝酿']},
+  {name:'第二篇 到红色首都去的路上',time:'1936年7月',place:'安塞→百家坪',people:'周恩来、贺龙',events:'斯诺在进入红区途中被白匪追逐，介绍国民党通过"民团"对地方的统治。在百家坪第一次见到周恩来，周恩来用英语打招呼并为他制定92天采访计划。讲述贺龙的革命事迹。',points:['周恩来温文尔雅、英语流利','贺龙用一把菜刀在湖南建立苏区','斯诺被红军的纪律和精神震撼']},
+  {name:'第三篇 在保安',time:'1936年7—8月',place:'陕西保安',people:'毛泽东',events:'斯诺终于见到毛泽东，进行长时间对话。毛泽东谈到共产党的基本政策是反帝反封建。介绍红军大学的课程设置和红军剧社的宣传工作，展现苏区的文化教育。',points:['毛泽东面容瘦削、像林肯','红军大学以窑洞为教室、石头为桌椅','红军剧社用文艺宣传革命']},
+  {name:'第四篇 一个共产党员的由来',time:'1893—1936年',place:'湖南→陕北',people:'毛泽东',events:'毛泽东自述人生经历：从童年的反抗精神，到青年时期求学探索，再到接受马克思主义、领导秋收起义、上井冈山，最终成长为红军领导人。展现毛泽东的思想转变轨迹。',points:['毛泽东童年反抗私塾和父亲','五四运动后接受马克思主义','领导秋收起义、创建井冈山根据地']},
+  {name:'第五篇 长征',time:'1934.10—1935.10',place:'江西→陕北',people:'红军全体将士',events:'讲述红军长征的艰难过程：第五次反围剿失败、举国大迁移、血战湘江、遵义会议、四渡赤水、巧渡金沙江、强渡大渡河、飞夺泸定桥、翻雪山过草地，最终胜利到达陕北。',points:['长征总行程二万五千里','遵义会议确立毛泽东领导地位','红军战士不怕牺牲的革命精神']},
+  {name:'第六篇 西北的红星',time:'1936年',place:'西北苏区',people:'刘志丹',events:'刘志丹开创西北苏区的历程。西北大灾荒和苛捐杂税给人民带来的苦难。苏维埃政权在社会、政治、经济、文化、货币等方面实行的政策，展现苏区的新面貌。',points:['刘志丹是西北苏区创始人','苏区实行土地改革、废除苛捐杂税','苏区男女平等、重视教育']},
+  {name:'第七篇 去前线的路上',time:'1936年8月',place:'甘肃前线',people:'苏区农民、工人',events:'斯诺前往甘肃前线途中，看到普通农民对红军的拥护，苏区工业的繁荣。与红色农民谈话，了解苏区工人的精神面貌——"他们唱得太多"，展现苏区人民的乐观精神。',points:['农民拥护红军、踊跃参军','苏区有自己的工业和货币','工人精神面貌焕然一新']},
+  {name:'第八篇 在红军中（上）',time:'1936年8—9月',place:'宁夏预旺堡',people:'彭德怀',events:'斯诺深入红军军营，记录彭德怀的生平与性格。介绍"真"的红军、游击战争的战术原则、红色战士的日常生活、政治课制度，展现红军的真实面貌和强大战斗力。',points:['彭德怀活泼爱笑、爱护部下','红军游击战"敌进我退、敌驻我扰"','红军官兵一致、纪律严明']},
+  {name:'第九篇 同红军在一起（续）',time:'1936年9月',place:'宁夏',people:'徐海东',events:'徐海东的出身与战斗经历——"红色窑工"，做了十一年窑工，九次负伤。讲述中国的阶级战争、西北四马（马步芳等军阀）、穆斯林与马克思主义者的关系，展现红军的军事策略和统战工作。',points:['徐海东出身窑工、阶级意识最强','红军团结少数民族','红军对俘虏的优待政策']},
+  {name:'第十篇 战争与和平',time:'1936年9—10月',place:'陕北',people:'红小鬼、朱德',events:'红小鬼的故事——年纪虽小却朝气蓬勃、纪律严明。共产党为建立抗日民族统一战线所做的努力。关于朱德的杰出领导才能和个人魅力，以及实践中的统一战线工作。',points:['红小鬼象征革命新生力量','朱德关爱部下、同甘共苦','共产党积极推动国共合作抗日']},
+  {name:'第十一篇 回到保安',time:'1936年10月',place:'陕西保安',people:'斯诺',events:'斯诺结束前线采访回到保安。途中所见所闻，保安的日常生活，苏联对中国革命的影响，中国共产主义与共产国际的关系。最后告别红色的中国，带着大量珍贵资料离开。',points:['斯诺收集了大量一手资料','中共与共产国际的关系','斯诺对红色中国的深刻印象']},
+  {name:'第十二篇 回到白色区域',time:'1936年10—12月',place:'西安→白区',people:'斯诺、张学良',events:'西安事变前夕的紧张局势，斯诺离开红区回到白色世界。对红色中国的未来做出展望与判断，对比红白区域的差异，预言红星必将照耀全中国。',points:['西安事变爆发、逼蒋抗日','斯诺向世界报道真实的红区','红星照耀中国的历史必然']}
+];
+function initLineSidebar(){
+  const data=currentBook==='redcrag'?redcragLsChapters:lsChapters;
+  const sb=document.getElementById('lsSidebar');
+  sb.innerHTML='<div class="ls-marker" id="lsMarker"></div>';
+  data.forEach((c,i)=>{
+    const item=document.createElement('div');
+    item.className='ls-item'+(i===0?' active':'');
+    item.textContent=c.name;
+    item.onclick=()=>{document.querySelectorAll('.ls-item').forEach(x=>x.classList.remove('active'));item.classList.add('active');renderLsContent(i)};
+    sb.appendChild(item);
+  });
+  renderLsContent(0);
+}
+function renderLsContent(i){
+  const data=currentBook==='redcrag'?redcragLsChapters:lsChapters;
+  const c=data[i];
+  document.getElementById('lsContent').innerHTML=`
+    <h4 style="font-family:var(--serif);font-size:20px;font-weight:900;color:var(--red-deep);margin-bottom:14px;line-height:1.4">${c.name}</h4>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+      <span style="font-size:13px;background:rgba(178,34,34,.1);color:var(--red-deep);padding:5px 12px;border-radius:3px;font-weight:700">🕐 ${c.time}</span>
+      <span style="font-size:13px;background:rgba(212,168,67,.15);color:#8B6914;padding:5px 12px;border-radius:3px;font-weight:700">📍 ${c.place}</span>
+      <span style="font-size:13px;background:rgba(0,0,0,.06);color:var(--ink-soft);padding:5px 12px;border-radius:3px;font-weight:700">👤 ${c.people}</span>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red);margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--red);display:inline-block">核心事件</div>
+      <p style="font-size:15px;line-height:2;color:var(--ink-soft)">${c.events}</p>
+    </div>
+    <div>
+      <div style="font-family:var(--serif);font-size:15px;font-weight:900;color:var(--red);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--red);display:inline-block">内容要点</div>
+      <ul style="padding-left:0;list-style:none">
+        ${c.points.map(p=>`<li style="font-size:14px;line-height:2;color:var(--ink-soft);padding-left:20px;position:relative;margin-bottom:4px"><span style="position:absolute;left:0;color:var(--red);font-weight:900">★</span>${p}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+// ===== 长征地图 =====
+const mapPoints=[
+  {title:'瑞金 · 出发地',time:'1934年10月',desc:'中央红军从江西瑞金出发，开始战略大转移。八万六千余人踏上长征之路。'},
+  {title:'湘江 · 血战湘江',time:'1934年11月',desc:'红军在湘江与国民党军激战，损失惨重，从八万余人锐减至三万余人。这是长征中最惨烈的一战。'},
+  {title:'遵义 · 遵义会议',time:'1935年1月',desc:'中共中央在贵州遵义召开政治局扩大会议，确立了毛泽东在党和红军中的领导地位，是党的历史上生死攸关的转折点。'},
+  {title:'金沙江 · 巧渡金沙江',time:'1935年5月',desc:'红军巧渡金沙江，跳出了国民党军队的包围圈，取得了战略转移中具有决定意义的胜利。'},
+  {title:'大渡河 · 强渡大渡河',time:'1935年5月',desc:'红军强渡大渡河、飞夺泸定桥，创造了战争史上的奇迹。22名勇士冒着枪林弹雨攀着铁索冲锋。'},
+  {title:'雪山 · 翻越大雪山',time:'1935年6月',desc:'红军翻越海拔4000多米的夹金山等多座大雪山，克服严寒、缺氧和饥饿，许多战士长眠于雪山之上。'},
+  {title:'草地 · 过草地',time:'1935年8月',desc:'红军穿越松潘大草地，沼泽遍布、粮食匮乏，战士们吃草根、煮皮带，展现了惊人的毅力和革命乐观主义精神。'},
+  {title:'陕北 · 胜利会师',time:'1935年10月',desc:'中央红军到达陕北吴起镇，与陕北红军胜利会师。长征胜利结束，中国革命的新局面由此开启。'}
+];
+function showMapPoint(idx,e){
+  e.stopPropagation();
+  const p=mapPoints[idx];
+  const popup=document.getElementById('mapPopup');
+  document.getElementById('mpTitle').textContent=p.title;
+  document.getElementById('mpTime').textContent=p.time;
+  document.getElementById('mpDesc').textContent=p.desc;
+  const wrap=document.getElementById('mapWrap');
+  const rect=wrap.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  const y=e.clientY-rect.top;
+  popup.style.left=Math.min(Math.max(x-140,10),rect.width-290)+'px';
+  popup.style.top='';
+  popup.style.bottom='';
+  if(y>rect.height*0.55){
+    popup.style.bottom=Math.max(rect.height-y+14,10)+'px';
+  }else{
+    popup.style.top=Math.max(y+14,10)+'px';
+  }
+  popup.classList.add('show');
+}
+function initMap(){document.addEventListener('click',e=>{if(!e.target.closest('.map-point')&&!e.target.closest('.map-popup'))document.getElementById('mapPopup')?.classList.remove('show')})}
+
+// ===== 微信主页 =====
+const wechatPeople=[
+  {name:'毛泽东',id:'mao_zedong_1893',region:'湖南 湘潭',sign:'星星之火，可以燎原。',avatar:'https://aka.doubaocdn.com/s/b9zkM40vvh',hasImg:true,tags:['天才军事家','博览群书','平易近人'],moments:[
+    {text:'长征胜利到达陕北！历经千难万险，红军战士们用双脚丈量了二万五千里。这不是结束，是新的开始。',loc:'陕西 吴起镇',time:'1935年10月'},
+    {text:'独坐池塘如虎踞，绿荫树下养精神。春来我不先开口，哪个虫儿敢作声？',loc:'湖南 韶山',time:'1925年'},
+    {text:'与斯诺彻夜长谈，从我的童年讲到革命，从个人讲到中国。希望世界能看到真实的红色中国。',loc:'陕西 保安',time:'1936年7月'}
+  ]},
+  {name:'周恩来',id:'zhou_enlai_1898',region:'江苏 淮安',sign:'为中华之崛起而读书。',avatar:'https://aka.doubaocdn.com/s/CMwQoEaW7S',hasImg:true,tags:['温文尔雅','头脑冷静','组织力强'],moments:[
+    {text:'为斯诺同志制定了92天的采访计划，希望他能把真实的红区告诉全世界。',loc:'陕西 百家坪',time:'1936年7月'},
+    {text:'第一次见到斯诺，用英语和他打招呼。他很惊讶一个红军领导人会说英语。',loc:'陕西 百家坪',time:'1936年7月'},
+    {text:'揽着红小鬼的胳膊在乡间散步，这些孩子是革命的未来。',loc:'陕西 保安',time:'1936年8月'}
+  ]},
+  {name:'彭德怀',id:'peng_dehuai_1898',region:'湖南 湘潭',sign:'兄弟们，跟我来！',avatar:'https://aka.doubaocdn.com/s/lkOC2OhGwt',hasImg:true,tags:['活泼爱笑','爱护部下','生活简朴'],moments:[
+    {text:'天冷了，看到小号手冻得发抖，把我的棉衣披在他身上。战士们比我更需要。',loc:'甘肃 西征前线',time:'1936年9月'},
+    {text:'用降落伞布做了件背心，同志们都说好看。这可是稀罕东西。',loc:'甘肃 预旺堡',time:'1936年8月'},
+    {text:'童年时反抗恶霸地主，被祖母赶出家门。那时候就知道，这个世道必须改变。',loc:'湖南 湘潭',time:'回忆'}
+  ]},
+  {name:'贺龙',id:'he_long_1896',region:'湖南 桑植',sign:'两把菜刀闹革命。',avatar:'',hasImg:false,tags:['英勇善战','威望极高','爱马如命'],moments:[
+    {text:'用一把菜刀在湖南建立了一个苏区。兄弟们，跟我干革命！',loc:'湖南 桑植',time:'1916年'},
+    {text:'我的爱马在战斗中被敌军俘获了，不行，得打回来！那匹马通人性。',loc:'湖南 洪湖',time:'1930年'},
+    {text:'不止一次把哥老会的兄弟收编进红军。只要是真心革命的，我贺龙都欢迎。',loc:'湖北 洪湖',time:'1931年'}
+  ]},
+  {name:'徐海东',id:'xu_haidong_1900',region:'湖北 黄陂',sign:'窑工出身，革命到底。',avatar:'',hasImg:false,tags:['出身窑工','九次负伤','作战勇猛'],moments:[
+    {text:'做了十一年窑工，受尽压迫。参加革命后九次负伤，身上的伤疤就是我的勋章。',loc:'湖北 黄陂',time:'回忆'},
+    {text:'在陕北迎接中央红军到达！终于会师了，这一路走来太不容易。',loc:'陕西 陕北',time:'1935年10月'},
+    {text:'斯诺说我是"阶级意识最强的人"。没错，我就是要为劳苦大众打天下。',loc:'陕西 预旺',time:'1936年8月'}
+  ]},
+  {name:'朱德',id:'zhu_de_1886',region:'四川 仪陇',sign:'官兵一致，同甘共苦。',avatar:'',hasImg:false,tags:['关爱部下','同甘共苦','沉稳宽厚'],moments:[
+    {text:'长征路上把马让给走累的同志，自己步行。总司令和战士没什么两样。',loc:'长征途中',time:'1935年'},
+    {text:'和战士们一起打球、讲故事。他们说我不像个总司令，我说这就对了。',loc:'江西 瑞金',time:'1933年'},
+    {text:'组织南昌起义、湘南起义，上井冈山和毛泽东同志会师。朱毛红军，从此天下闻名。',loc:'江西 井冈山',time:'1928年'}
+  ]}
+];
+let wxCurrent=0;
+function getWxData(){return currentBook==='redcrag'?redcragWechatPeople:wechatPeople}
+function initWechat(){
+  wxCurrent=0;
+  renderWechatProfile();
+}
+function renderWechatProfile(){
+  const data=getWxData();
+  const p=data[wxCurrent];
+  const avatarHtml=p.hasImg?`<img src="${p.avatar}" alt="${p.name}" onclick="showAvatar('${p.avatar}')">`:p.name.charAt(0);
+  document.getElementById('wechatWrap').innerHTML=`
+    <div class="wx-profile" id="wxProfile">
+      <div class="wx-top">
+        <div class="wx-avatar">${avatarHtml}</div>
+        <div class="wx-info"><div class="wx-name">${p.name}</div><div class="wx-id">微信号：${p.id}</div></div>
+        <div class="wx-qr"></div>
+      </div>
+      <div class="wx-row"><span class="label">地区</span><span class="value">${p.region}<span class="arrow">&#8250;</span></span></div>
+      <div class="wx-row" onclick="showMoments()"><span class="label">朋友圈</span><span class="value"><span class="wx-moments-entry"><span class="m-imgs"><span class="m-img"></span><span class="m-img"></span><span class="m-img"></span></span>${p.moments.length}条<span class="arrow">&#8250;</span></span></span></div>
+      <div class="wx-row"><span class="label">个性签名</span><span class="value" style="max-width:200px;text-align:right">${p.sign}<span class="arrow">&#8250;</span></span></div>
+      <div class="wx-tags">${p.tags.map(t=>`<span class="wx-tag">${t}</span>`).join('')}</div>
+    </div>
+    <div class="wx-moments" id="wxMoments">
+      <div class="wx-moments-header"><span class="back" onclick="hideMoments()">&#8249;</span><span class="title">${p.name}的朋友圈</span><span style="width:20px"></span></div>
+      ${[...p.moments].sort((a,b)=>{const pa=a.time==='回忆'?0:(parseInt(a.time.match(/\d{4}/)?.[0]||0)*100+parseInt(a.time.match(/(\d{1,2})月/)?.[1]||0));const pb=b.time==='回忆'?0:(parseInt(b.time.match(/\d{4}/)?.[0]||0)*100+parseInt(b.time.match(/(\d{1,2})月/)?.[1]||0));return pb-pa}).map(m=>`
+        <div class="wx-moment">
+          <div class="m-avatar">${p.hasImg?`<img src="${p.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`:p.name.charAt(0)}</div>
+          <div class="m-body">
+            <div class="m-name">${p.name}</div>
+            <div class="m-text">${m.text}</div>
+            <div class="m-loc">📍 ${m.loc}</div>
+            <div class="m-time">${m.time}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap">
+      ${getWxData().map((pp,i)=>`<button onclick="switchWxPerson(${i})" style="padding:6px 14px;background:${i===wxCurrent?'var(--red)':'var(--paper-dark)'};color:${i===wxCurrent?'#fff':'var(--ink-soft)'};border:none;border-radius:4px;cursor:pointer;font-family:var(--serif);font-size:13px">${pp.name}</button>`).join('')}
+    </div>
+  `;
+}
+function switchWxPerson(i){wxCurrent=i;renderWechatProfile()}
+function showMoments(){document.getElementById('wxProfile').style.display='none';document.getElementById('wxMoments').classList.add('show')}
+function hideMoments(){document.getElementById('wxProfile').style.display='block';document.getElementById('wxMoments').classList.remove('show')}
+function showAvatar(src){const m=document.getElementById('avatarModal');document.getElementById('avatarModalImg').src=src;m.classList.add('show')}
+
+// ===== 真题题库 =====
+const quizBank=[
+  {type:'选择题',source:'2024·广东中考',q:'下列关于《红星照耀中国》的表述，不正确的一项是',opts:['本书又名《西行漫记》，作者是美国记者埃德加·斯诺','斯诺于1936年深入陕北革命根据地进行实地采访','本书是一部虚构的长篇小说，人物和情节均为作者创作','全书共十二篇，真实记录了红军长征及领导人情况'],answer:2,analysis:'《红星照耀中国》是纪实文学作品，所有内容来自斯诺的实地采访，并非虚构小说。',points:[{score:'2分',text:'识别纪实文学体裁，C选项"虚构小说"表述错误'}]},
+  {type:'选择题',source:'2023·四川中考',q:'下列情节与人物对应正确的一项是',opts:['用一把菜刀在湖南建立苏区——彭德怀','脱下棉衣披在小号手身上——彭德怀','第一次见面用英语和斯诺打招呼——毛泽东','出身窑工、九次负伤——贺龙'],answer:1,analysis:'A项菜刀革命是贺龙；C项用英语打招呼是周恩来；D项出身窑工是徐海东。',points:[{score:'2分',text:'B项彭德怀给小号手披棉衣对应正确，其余三项人物对应错误'}]},
+  {type:'填空题',source:'2024·山东中考',q:'红军长征中一共爬过____座山脉，渡过____条河流，经过____个省份。',opts:['18 / 24 / 12','12 / 18 / 24','24 / 12 / 18','18 / 12 / 24'],answer:0,analysis:'红军长征爬过18座山脉，渡过24条河流，经过12个省份。',points:[{score:'3分',text:'三个数据全部正确方可得满分，错一个扣1分'}]},
+  {type:'选择题',source:'2025·浙江模拟',q:'斯诺在《红星照耀中国》中第一次见面用英语温和文雅地打招呼的人物是',opts:['毛泽东','周恩来','彭德怀','朱德'],answer:1,analysis:'周恩来第一次见面用英语和斯诺打招呼，这是他的经典细节。',points:[{score:'2分',text:'周恩来曾留学海外，英语流利，温文尔雅是其形象特征'}]},
+  {type:'选择题',source:'2024·江苏中考',q:'《红星照耀中国》中"红小鬼"群体的象征意义是',opts:['红军战斗力薄弱的体现','革命的新生力量和未来希望','国民党对红军的污蔑','苏区教育落后的表现'],answer:1,analysis:'红小鬼象征革命新生力量和未来希望，展现苏区朝气蓬勃的面貌。',points:[{score:'2分',text:'红小鬼朝气蓬勃、纪律严明，象征革命后继有人'}]},
+  {type:'简答题',source:'2024·福建中考',q:'结合原著，分析毛泽东的人物形象。（4分）',opts:[],answer:-1,analysis:'①毛泽东是极具魅力与智慧的领袖，面容瘦削，有着农民质朴纯真的性格，平易近人，生活极为俭朴。②他是卓有成就的学者，学贯中西；同时也是天才的军事和政治战略家。',points:[{score:'2分',text:'性格特点：质朴纯真、平易近人、生活简朴（结合与战士同吃同住等事例）'},{score:'2分',text:'才能品质：博览群书、学贯中西，天才的军事和政治战略家'}]},
+  {type:'简答题',source:'2023·河南中考',q:'"红星照耀中国"中的"红星"有什么含义？书名有什么作用？（4分）',opts:[],answer:-1,analysis:'①"红星"指代中国共产党及其领导的红色革命事业。②寓意革命事业犹如闪亮的红星，必将照耀全中国。③点明主旨，奠定感情基调。',points:[{score:'1分',text:'"红星"指代中国共产党及其领导的红色革命'},{score:'2分',text:'书名寓意：红星不仅照耀西北，必将照耀全中国和全世界'},{score:'1分',text:'作用：点明主旨，奠定歌颂革命的感情基调，具有象征意义'}]},
+  {type:'选择题',source:'2025·湖北模拟',q:'下列哪一项不是《红星照耀中国》中彭德怀的事迹？',opts:['脱下棉衣给小号手披上','用降落伞布做背心','用一把菜刀闹革命','把马让给伤员骑'],answer:2,analysis:'用一把菜刀闹革命的是贺龙，不是彭德怀。',points:[{score:'2分',text:'菜刀革命是贺龙的经典事迹，彭德怀的事迹是披棉衣、让马、降落伞背心'}]},
+  {type:'填空题',source:'2024·安徽中考',q:'《红星照耀中国》的作者是____（国籍）记者____，本书又名____。',opts:['美国 / 埃德加·斯诺 / 西行漫记','英国 / 埃德加·斯诺 / 红星照耀中国','美国 / 史沫特莱 / 西行漫记','法国 / 埃德加·斯诺 / 长征记'],answer:0,analysis:'作者是美国记者埃德加·斯诺，本书又名《西行漫记》。',points:[{score:'3分',text:'国籍、作者、别名三项各1分'}]},
+  {type:'简答题',source:'2025·广东模拟',q:'结合原著，说说长征精神的内涵。（4分）',opts:[],answer:-1,analysis:'长征精神包括：不怕牺牲、敢于胜利的革命乐观主义精神；顾全大局、严守纪律、亲密团结的高尚品德；百折不挠、自强不息的民族精神。',points:[{score:'2分',text:'不怕牺牲、敢于胜利的革命乐观主义精神'},{score:'2分',text:'顾全大局、严守纪律、亲密团结，百折不挠、自强不息'}]},
+  {type:'选择题',source:'2024·湖南中考',q:'《红星照耀中国》中，被斯诺称为"阶级意识最强的人"的是',opts:['毛泽东','周恩来','徐海东','彭德怀'],answer:2,analysis:'徐海东出身窑工，自幼饱受阶级压迫，被斯诺称为"阶级意识最强的人"。',points:[{score:'2分',text:'徐海东出身底层窑工，九次负伤，阶级意识最强'}]},
+  {type:'简答题',source:'2023·陕西中考',q:'简述《红星照耀中国》中"红小鬼"的形象特点及作用。（4分）',opts:[],answer:-1,analysis:'红小鬼年纪幼小却朝气蓬勃，吃苦耐劳、不畏艰险，纪律严明、信仰坚定。作用：象征革命新生力量，展现苏区平等自由的社会环境，打破外界对红军的刻板偏见。',points:[{score:'2分',text:'形象特点：朝气蓬勃、吃苦耐劳、纪律严明、信仰坚定'},{score:'2分',text:'作用：象征革命未来，展现苏区新面貌，丰富人物群像'}]}
+];
+let quizShown=[];
+function initQuiz(){
+  quizShown=[];
+  const bank=currentBook==='redcrag'?redcragQuizBank:quizBank;
+  const pool=[...bank];
+  for(let i=0;i<5&&pool.length>0;i++){
+    const idx=Math.floor(Math.random()*pool.length);
+    quizShown.push(pool.splice(idx,1)[0]);
+  }
+  renderQuiz();
+}
+function refreshQuiz(){initQuiz()}
+function renderQuiz(){
+  const list=document.getElementById('quizList');
+  list.innerHTML=quizShown.map((q,i)=>{
+    if(q.opts.length>0){
+      return `<div class="quiz-item"><div class="quiz-header" style="margin-bottom:8px"><span class="quiz-source">${q.source}</span><span class="q-num">第${i+1}题 · ${q.type}</span></div><div class="q-text">${q.q}</div><div class="quiz-opts" data-idx="${i}">${q.opts.map((o,j)=>`<div class="quiz-opt" onclick="answerQuiz(${i},${j},this)">${String.fromCharCode(65+j)}. ${o}</div>`).join('')}</div><div class="quiz-answer" id="qa${i}"><div class="ans-label">参考答案：${String.fromCharCode(65+q.answer)}</div><div>${q.analysis}</div><div class="ans-points">${q.points.map(p=>`<div class="pt"><span class="pt-score">【${p.score}】</span><span>${p.text}</span></div>`).join('')}</div></div></div>`;
+    }else{
+      return `<div class="quiz-item"><div class="quiz-header" style="margin-bottom:8px"><span class="quiz-source">${q.source}</span><span class="q-num">第${i+1}题 · ${q.type}</span></div><div class="q-text">${q.q}</div><button class="quiz-refresh" style="margin-bottom:0" onclick="document.getElementById('qa${i}').classList.toggle('show')">查看参考答案</button><div class="quiz-answer" id="qa${i}"><div class="ans-label">参考答案</div><div>${q.analysis}</div><div class="ans-points">${q.points.map(p=>`<div class="pt"><span class="pt-score">【${p.score}】</span><span>${p.text}</span></div>`).join('')}</div></div></div>`;
+    }
+  }).join('');
+}
+function answerQuiz(qi,chosen,el){
+  const q=quizShown[qi];
+  const container=el.parentElement;
+  container.querySelectorAll('.quiz-opt').forEach((o,j)=>{
+    o.classList.add('disabled');
+    if(j===q.answer)o.classList.add('correct');
+  });
+  if(chosen!==q.answer)el.classList.add('wrong');
+  document.getElementById('qa'+qi).classList.add('show');
+}
+
+// ===== 金句 3D轮盘 =====
+const quotes=[
+  {text:'中国共产党及其领导的革命事业犹如一颗闪亮的红星，不仅照耀中国的西北，而且必将照耀全中国，照耀全世界。',src:'书名寓意'},
+  {text:'冒险、探索、发现、勇气和胆怯、胜利和狂喜、艰难困苦、英勇牺牲、忠心耿耿，这些千千万万青年人的经久不衰的热情，像一把烈焰，贯穿着这一切。',src:'埃德加·斯诺'},
+  {text:'只有中国人民自己能够使中国打胜；也只有中国人自己会使中国失败。',src:'埃德加·斯诺'},
+  {text:'他们不是奴仆。他们是未来的红色战士。',src:'斯诺评价红小鬼'},
+  {text:'红军军官习惯说的是"兄弟们，跟我来！"而不是说"兄弟们，向前冲！"',src:'埃德加·斯诺'},
+  {text:'只要还有一口气，就要为信念奋斗到底。',src:'革命者的信念写照'},
+  {text:'有某种东西使得个人的痛苦或胜利成了大家集体的负担或喜悦，有某种力量消除了个人的差别。',src:'埃德加·斯诺'},
+  {text:'历史是终极武器，因为它能驾驭时间。',src:'埃德加·斯诺'},
+  {text:'但愿润之革命，早日成功。',src:'埃德加·斯诺'},
+  {text:'这些千千万万青年人的经久不衰的热情、始终如一的希望、令人惊诧的革命乐观情绪，像一把烈焰。',src:'埃德加·斯诺'}
+];
+let wheelIndex=0;
+let wheelCooldown=false;
+function getQuotes(){return currentBook==='redcrag'?redcragQuotes:quotes}
+function initWheel(){wheelIndex=0;renderWheel()}
+function renderWheel(){
+  const wrap=document.getElementById('wheelWrap');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  const qs=getQuotes();
+  const total=qs.length;
+  qs.forEach((q,i)=>{
+    const item=document.createElement('div');
+    item.className='wheel-item'+(i===wheelIndex?' active':'');
+    const short=q.text.length>14?q.text.substring(0,14)+'…':q.text;
+    item.textContent=short;
+    item.onclick=()=>{wheelIndex=i;renderWheel()};
+    let offset=i-wheelIndex;
+    if(offset>total/2)offset-=total;
+    if(offset<-total/2)offset+=total;
+    const abs=Math.abs(offset);
+    const dir=offset===0?0:offset>0?1:-1;
+    item.style.transform=`translateY(${offset*40}px) translateX(${dir*abs*18}px) translateZ(${-abs*70}px) rotateY(${-dir*18}deg) scale(${1-abs*0.07})`;
+    item.style.opacity=Math.max(0.12,1-abs*0.2);
+    item.style.filter=`blur(${Math.min(5,abs*1.2)}px)`;
+    item.style.zIndex=100-abs;
+    wrap.appendChild(item);
+  });
+  updateWheelDisplay();
+}
+function updateWheelDisplay(){
+  const qs=getQuotes();
+  const q=qs[wheelIndex];
+  document.getElementById('wheelDisplay').innerHTML=`<div class="wd-text">"${q.text}"</div><div class="wd-src">—— ${q.src}</div>`;
+}
+document.addEventListener('wheel',e=>{
+  if(!document.getElementById('readerDetail').classList.contains('show'))return;
+  if(currentChapter!==7)return;
+  if(wheelCooldown)return;
+  wheelCooldown=true;
+  setTimeout(()=>wheelCooldown=false,450);
+  const qs=getQuotes();
+  if(e.deltaY>0&&wheelIndex<qs.length-1){wheelIndex++;renderWheel()}
+  if(e.deltaY<0&&wheelIndex>0){wheelIndex--;renderWheel()}
+},{passive:true});
+
+// 键盘
+document.addEventListener('keydown',e=>{
+  if(sceneReader.classList.contains('hidden'))return;
+  if(document.getElementById('readerDetail').classList.contains('show')){
+    if(e.key==='ArrowLeft')navDetail(-1);
+    if(e.key==='ArrowRight')navDetail(1);
+    if(e.key==='Escape')backToMenu();
+  }else{
+    if(e.key==='ArrowLeft')mcNav(-1);
+    if(e.key==='ArrowRight')mcNav(1);
+    if(e.key==='Escape')closeBook();
+  }
+});
+
+// ========== CircularGallery 红岩目录 ==========
+let cgAngle=0;
+let cgDragging=false;
+let cgMoved=false;
+let cgStartX=0;
+let cgStartAngle=0;
+function initCircularGallery(){
+  cgAngle=0;
+  const ring=document.getElementById('cgRing');
+  ring.innerHTML='';
+  const total=redcragChapters.length;
+  const angleStep=360/total;
+  const isMobile=window.innerWidth<768;
+  const radius=isMobile?165:230;
+  redcragChapters.forEach((c,i)=>{
+    const card=document.createElement('div');
+    card.className='cg-card';
+    card.innerHTML=`<div class="cg-num">第${c.num}章</div><div class="cg-name">${c.name}</div><div class="cg-en">${c.en}</div><svg class="cg-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+    card.style.transform=`rotateY(${i*angleStep}deg) translateZ(${radius}px)`;
+    card.addEventListener('click',e=>{if(!cgMoved)openDetail(i)});
+    ring.appendChild(card);
+  });
+  updateCG();
+  const wrap=document.getElementById('cgWrap');
+  wrap.addEventListener('mousedown',e=>{cgDragging=true;cgMoved=false;cgStartX=e.clientX;cgStartAngle=cgAngle;e.preventDefault()});
+  document.addEventListener('mousemove',e=>{
+    if(!cgDragging)return;
+    if(Math.abs(e.clientX-cgStartX)>5)cgMoved=true;
+    cgAngle=cgStartAngle+(e.clientX-cgStartX)*0.4;
+    updateCG();
+  });
+  document.addEventListener('mouseup',()=>{if(cgDragging){cgDragging=false;setTimeout(()=>cgMoved=false,50);snapCG()}});
+  wrap.addEventListener('wheel',e=>{e.preventDefault();cgAngle+=e.deltaY*0.25;updateCG()},{passive:false});
+  wrap.addEventListener('touchstart',e=>{cgDragging=true;cgMoved=false;cgStartX=e.touches[0].clientX;cgStartAngle=cgAngle},{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!cgDragging)return;
+    if(Math.abs(e.touches[0].clientX-cgStartX)>5)cgMoved=true;
+    cgAngle=cgStartAngle+(e.touches[0].clientX-cgStartX)*0.4;
+    updateCG();
+  },{passive:true});
+  document.addEventListener('touchend',()=>{if(cgDragging){cgDragging=false;setTimeout(()=>cgMoved=false,50);snapCG()}});
+}
+function updateCG(){
+  const ring=document.getElementById('cgRing');
+  if(!ring)return;
+  ring.style.transform=`rotateY(${cgAngle}deg)`;
+  const total=redcragChapters.length;
+  const angleStep=360/total;
+  let nearest=Math.round(-cgAngle/angleStep)%total;
+  if(nearest<0)nearest+=total;
+  document.getElementById('cgCenterTitle').textContent=redcragChapters[nearest].name;
+}
+function snapCG(){
+  const total=redcragChapters.length;
+  const angleStep=360/total;
+  const nearest=Math.round(-cgAngle/angleStep);
+  cgAngle=-nearest*angleStep;
+  updateCG();
+}
+
+// ========== 红岩数据 ==========
+const redcragChapters=[
+  {num:'壹',name:'书籍档案',en:'BOOK ARCHIVE'},
+  {num:'贰',name:'内容概览',en:'CONTENTS'},
+  {num:'叁',name:'狱中斗争',en:'PRISON STRUGGLE'},
+  {num:'肆',name:'人物档案',en:'PROFILES'},
+  {num:'伍',name:'关系图谱',en:'RELATIONS'},
+  {num:'陆',name:'考点梳理',en:'EXAM TIPS'},
+  {num:'柒',name:'真题演练',en:'PRACTICE'},
+  {num:'捌',name:'金句摘抄',en:'QUOTES'}
+];
+
+const redcragLsChapters=[
+  {name:'一、地下斗争初起',time:'1948年初',place:'重庆',people:'许云峰、江姐、成岗',events:'重庆解放前夕，地下党活动活跃。许云峰命甫志高建立沙坪书店作为备用联络站，成岗负责印刷《挺进报》，江姐赴华蓥山根据地工作。',points:['沙坪书店建立','《挺进报》秘密出版','江姐赴华蓥山']},
+  {name:'二、特务渗透潜伏',time:'1948年春',place:'重庆沙坪书店',people:'郑克昌、陈松林、甫志高',events:'特务郑克昌伪装进步青年潜入沙坪书店，骗取陈松林信任。甫志高不顾许云峰警告，擅自扩大书店规模，埋下暴露隐患。',points:['郑克昌伪装潜伏','甫志高违反纪律','沙坪书店暴露风险']},
+  {name:'三、江姐痛失爱人',time:'1948年夏',place:'华蓥山',people:'江姐、彭松涛',events:'江姐赴华蓥山途中，在城头上看到丈夫彭松涛的头颅被悬挂示众。她将个人悲痛化为革命力量，强忍泪水继承丈夫遗志继续战斗。',points:['彭松涛牺牲','江姐强忍悲痛','继承遗志战斗']},
+  {name:'四、叛徒出卖被捕',time:'1948年夏',place:'重庆',people:'甫志高、许云峰、江姐',events:'甫志高叛变投敌，许云峰在茶园敏锐察觉危险，果断通知同志转移，自己却被捕。随后江姐、成岗等大批地下党人相继被捕。',points:['甫志高叛变','许云峰被捕','江姐成岗被捕']},
+  {name:'五、江姐酷刑不屈',time:'1948年秋',place:'渣滓洞',people:'江姐、徐鹏飞',events:'江姐被关押渣滓洞，特务徐鹏飞对她严刑拷打，竹签钉入十指。江姐坚贞不屈："竹签子是竹做的，共产党员的意志是钢铁！"狱友唱歌鼓励。',points:['竹签钉十指','江姐坚贞不屈','狱友唱歌鼓励']},
+  {name:'六、渣滓洞狱中斗争',time:'1948冬—1949春',place:'渣滓洞',people:'江姐、李青竹、孙明霞',events:'狱中党组织秘密建立，江姐成为核心。狱中新年大联欢，战友们用歌声和诗歌互相鼓励，秘密传递解放战争胜利消息。',points:['狱中党组织','新年大联欢','传递胜利消息']},
+  {name:'七、白公馆秘密战线',time:'1949年春',place:'白公馆',people:'许云峰、成岗、华子良',events:'许云峰、成岗被关押白公馆。成岗狱中继续出版《挺进报》，华子良伪装疯癫忍辱负重，许云峰用手指和铁镣在岩石上挖秘密通道。',points:['成岗狱中办报','华子良装疯','许云峰挖通道']},
+  {name:'八、刘思扬的考验',time:'1949年夏',place:'刘宅→白公馆',people:'刘思扬',events:'刘思扬出身资产阶级家庭，家人营救、国民党假意释放。他拒绝登报悔过，回家遭软禁，识破特务伪装地下党的骗局后再次被捕。',points:['拒绝悔过自新','识破特务骗局','再次入狱']},
+  {name:'九、狱中绣红旗',time:'1949年10月',place:'渣滓洞',people:'江姐、孙明霞等',events:'新中国成立消息传入狱中，江姐和战友们拆下红色被面，用红药水和黄草纸绣制五星红旗，在狱中迎接解放。',points:['新中国成立消息','绣制五星红旗','憧憬胜利']},
+  {name:'十、11·27大屠杀与越狱',time:'1949年11月',place:'渣滓洞·白公馆',people:'全体狱友、华子良',events:'重庆解放前夕，特务制造11·27大屠杀，大批烈士牺牲。华子良逃出与地下党接应，部分同志利用许云峰挖的通道越狱，11月30日重庆解放。',points:['11·27大屠杀','华子良越狱接应','重庆解放']}
+];
+
+const redcragTimeline=[
+  {time:'1948年初',place:'重庆',event:'沙坪书店建立',task:'建立地下党备用联络站，秘密出版《挺进报》',desc:'许云峰命甫志高建立沙坪书店作为地下党备用联络站，成岗负责刻字印刷《挺进报》，地下斗争在重庆悄然展开。'},
+  {time:'1948年春',place:'重庆',event:'甫志高叛变',task:'叛徒出卖，地下党组织遭严重破坏',desc:'甫志高不顾许云峰警告违反纪律，被捕后叛变投敌，导致许云峰、成岗、江姐等大批地下党人相继被捕。'},
+  {time:'1948年夏',place:'渣滓洞',event:'江姐受刑',task:'面对酷刑，保守党的秘密',desc:'特务徐鹏飞对江姐严刑拷打，竹签钉入十指。江姐坚贞不屈，用钢铁意志震撼敌人，鼓舞了全体狱友。'},
+  {time:'1949年春',place:'白公馆',event:'狱中《挺进报》',task:'在狱中坚持宣传斗争',desc:'成岗在白公馆秘密刻字出版《挺进报》，将胜利消息传递给狱友；华子良伪装疯癫忍辱负重，暗中联络。'},
+  {time:'1949年夏',place:'白公馆地窖',event:'许云峰挖通道',task:'为战友越狱准备条件',desc:'许云峰被单独关押在地窖中，用手指和铁镣在坚硬岩石上挖出一条秘密通道，自己却未能等到越狱那天。'},
+  {time:'1949.10.01',place:'渣滓洞',event:'狱中绣红旗',task:'庆祝新中国成立，迎接解放',desc:'新中国成立消息传入狱中，江姐和孙明霞等拆下红色被面，用黄草纸剪出五角星，绣制了一面特殊的五星红旗。'},
+  {time:'1949.11.27',place:'渣滓洞·白公馆',event:'11·27大屠杀',task:'最后关头，从容就义',desc:'重庆解放前夕，特务对政治犯进行集体大屠杀，江姐、许云峰、成岗等大批烈士壮烈牺牲，许多人没能等到胜利。'},
+  {time:'1949.11.30',place:'重庆',event:'重庆解放',task:'越狱成功，迎接胜利',desc:'华子良逃出监狱与地下党和解放军接应，部分同志利用许云峰挖的通道越狱成功。11月30日重庆解放，红岩精神永存。'}
+];
+
+const redcragWechatPeople=[
+  {name:'江姐',id:'jiang_xueqin',region:'四川 自贡',sign:'共产党员的意志是钢铁！',avatar:'',hasImg:false,tags:['坚贞不屈','沉着稳重','顾全大局'],moments:[
+    {text:'竹签子是竹做的，共产党员的意志是钢铁！徐鹏飞，你还有什么刑具尽管使出来。',loc:'重庆 渣滓洞',time:'1948年秋'},
+    {text:'在城头上看到了松涛的头颅……眼泪不能流，工作还要继续。松涛，你的遗志我来完成。',loc:'四川 华蓥山',time:'1948年夏'},
+    {text:'和姐妹们一起绣了一面五星红旗，虽然星星位置不太对，但这是我们心中的新中国。',loc:'重庆 渣滓洞',time:'1949年10月'}
+  ]},
+  {name:'许云峰',id:'xu_yunfeng',region:'江苏 扬州',sign:'我应该在烈火与热血中得到永生！',avatar:'',hasImg:false,tags:['冷静果断','勇敢机智','自我牺牲'],moments:[
+    {text:'在茶园发现甫志高不对劲，立刻让李敬原撤离。自己走不了了，但同志们安全就好。',loc:'重庆 茶园',time:'1948年夏'},
+    {text:'地窖里漆黑一片，但我用手指和铁镣在挖一条通道。手指磨烂了没关系，战友们能出去就行。',loc:'重庆 白公馆地窖',time:'1949年夏'},
+    {text:'徐鹏飞设宴劝降，我把宴席变成揭露敌人的讲台。想让我屈服？做梦。',loc:'重庆 白公馆',time:'1948年秋'}
+  ]},
+  {name:'成岗',id:'cheng_gang',region:'重庆',sign:'对着死亡我放声大笑！',avatar:'',hasImg:false,tags:['沉着冷静','坚强勇敢','乐观坚毅'],moments:[
+    {text:'敌人来抓我了，先把扫帚挂到窗口——这是警报信号，同志们看到就会转移。',loc:'重庆 沙坪书店',time:'1948年夏'},
+    {text:'在白公馆继续刻钢板，《挺进报》不能停。即使在狱中，我们的声音也要传出去。',loc:'重庆 白公馆',time:'1949年春'},
+    {text:'任脚下响着沉重的铁镣，任你把皮鞭举得高高，我不需要什么"自白"，哪怕胸口对着带血的刺刀！',loc:'重庆 白公馆',time:'1949年秋'}
+  ]},
+  {name:'刘思扬',id:'liu_siyang',region:'重庆',sign:'宁可把牢底坐穿，绝不悔过自新！',avatar:'',hasImg:false,tags:['忠贞不屈','革命热情','剥削阶级出身'],moments:[
+    {text:'家人来劝我登报悔过就可以出去。笑话！我刘思扬要是怕死，就不会参加革命了。',loc:'重庆 渣滓洞',time:'1948年冬'},
+    {text:'被"释放"回家了，但我知道这是阴谋。果然有特务冒充地下党来接头，被我识破了。',loc:'重庆 刘宅',time:'1949年夏'},
+    {text:'又回来了，白公馆。成岗，我们继续战斗！',loc:'重庆 白公馆',time:'1949年夏'}
+  ]},
+  {name:'小萝卜头',id:'song_zhenzhong',region:'江苏 邳州',sign:'我要上学，我要自由！',avatar:'',hasImg:false,tags:['天真善良','渴望自由','人小志大'],moments:[
+    {text:'今天放风时抓到一只虫子，我把它放飞了。虫子都能自由飞，我什么时候能出去上学呢？',loc:'重庆 白公馆',time:'1948年'},
+    {text:'成岗叔叔教我认字，许云峰叔叔给我讲故事。虽然在监狱里，但我学到了很多东西。',loc:'重庆 白公馆',time:'1949年'},
+    {text:'爸爸妈妈说，等解放了就带我去北京上学。我等着那一天。',loc:'重庆 白公馆',time:'1949年夏'}
+  ]},
+  {name:'华子良',id:'hua_ziliang',region:'山东',sign:'忍辱负重，只为最后一击！',avatar:'',hasImg:false,tags:['忍辱负重','深谋远虑','忠于革命'],moments:[
+    {text:'十五年了，所有人都以为我疯了。每天挑水、扫地、傻笑……但我心里比谁都清楚。',loc:'重庆 白公馆',time:'1949年春'},
+    {text:'许云峰把挖通道的秘密告诉了我。我记住了，等到那一天，我会带同志们出去。',loc:'重庆 白公馆',time:'1949年夏'},
+    {text:'趁买菜的机会跑出来了！终于和组织接上了头。同志们，再坚持一下，解放军来了！',loc:'重庆 歌乐山',time:'1949年11月'}
+  ]}
+];
+
+const redcragQuizBank=[
+  {type:'选择题',source:'2024·四川中考',q:'《红岩》中，面对竹签钉指的酷刑坚贞不屈，说出"共产党员的意志是钢铁"的人物是',opts:['江姐','许云峰','成岗','刘思扬'],answer:0,analysis:'江姐被叛徒甫志高出卖后关押渣滓洞，面对竹签钉指酷刑坚贞不屈，说出"共产党员的意志是钢铁"的名言。',points:[{score:'2分',text:'江姐是竹签钉指酷刑的经典人物，A选项正确'}]},
+  {type:'选择题',source:'2024·重庆中考',q:'下列关于《红岩》的表述，不正确的一项是',opts:['作者是罗广斌、杨益言，二人都有狱中经历','全书共30章，以狱中斗争为主线','小萝卜头是书中年龄最小的革命者','华子良是出卖同志的叛徒'],answer:3,analysis:'华子良是伪装疯癫、忍辱负重的革命同志，出卖同志的叛徒是甫志高。',points:[{score:'2分',text:'D选项错误，华子良是正面人物，叛徒是甫志高'}]},
+  {type:'选择题',source:'2025·浙江模拟',q:'《红岩》中，在白公馆地窖里用手指和铁镣挖出秘密通道的人物是',opts:['江姐','许云峰','成岗','华子良'],answer:1,analysis:'许云峰被单独关押在白公馆地窖，用手指和铁镣在坚硬岩石上挖出秘密通道，为战友越狱创造条件。',points:[{score:'2分',text:'许云峰挖通道是经典情节，B选项正确'}]},
+  {type:'填空题',source:'2024·山东中考',q:'《红岩》中，狱中战友们得知新中国成立后，用____和____绣制了一面五星红旗。',opts:['红色被面 / 黄草纸','红旗 / 金线','棉布 / 染料','纱布 / 鲜血'],answer:0,analysis:'江姐和战友们拆下红色被面，用黄草纸剪出五角星，绣制了一面特殊的五星红旗。',points:[{score:'3分',text:'红色被面和黄草纸，两个材料各1.5分'}]},
+  {type:'选择题',source:'2024·广东中考',q:'《红岩》的三条叙事线索不包括',opts:['地下党城市运动','华蓥山武装斗争','渣滓洞白公馆狱中斗争','长征战略转移'],answer:3,analysis:'长征是《红星照耀中国》的内容，《红岩》三条线索是城市运动、华蓥山斗争、狱中斗争。',points:[{score:'2分',text:'D选项长征属于《红星照耀中国》，不是《红岩》的线索'}]},
+  {type:'简答题',source:'2024·福建中考',q:'结合原著，分析江姐的人物形象。（4分）',opts:[],answer:-1,analysis:'①江姐是政治上成熟的共产党员，对党忠贞，对敌斗争顽强不屈。②丈夫牺牲时强忍悲痛，将个人情感融入革命事业。③面对竹签钉指酷刑坚贞不屈，是无产阶级真善美的化身。④关怀同志，引导成岗树立正确恋爱观，体现革命温情。',points:[{score:'2分',text:'性格特点：坚贞不屈、沉着稳重、顾全大局，对党无比忠诚'},{score:'2分',text:'结合事例：丈夫牺牲强忍悲痛、竹签钉指不屈、关怀同志'}]},
+  {type:'简答题',source:'2023·河南中考',q:'《红岩》中"狱中绣红旗"情节有什么象征意义？（4分）',opts:[],answer:-1,analysis:'①红旗象征革命胜利，革命者身陷牢狱却心系新中国。②身处绝境依旧心怀希望，体现革命乐观主义精神。③印证正义终将战胜黑暗，点明"信仰不灭"的核心主旨。④表达对祖国的赤诚热爱和对革命信仰的坚守。',points:[{score:'2分',text:'象征革命胜利和新中国，革命者心系祖国'},{score:'2分',text:'体现绝境中的希望和乐观主义，点明信仰不灭的主旨'}]},
+  {type:'选择题',source:'2025·湖北模拟',q:'《红岩》中，伪装疯癫十五年、最终越狱与组织接应的人物是',opts:['华子良','许云峰','成岗','甫志高'],answer:0,analysis:'华子良伪装疯癫十五年，忍辱负重，最终趁买菜机会逃出监狱与地下党接应，为越狱做出关键贡献。',points:[{score:'2分',text:'华子良装疯越狱，A选项正确'}]},
+  {type:'填空题',source:'2024·安徽中考',q:'《红岩》的作者是____和____，小说以____解放前夕的狱中斗争为核心。',opts:['罗广斌 / 杨益言 / 重庆','巴金 / 茅盾 / 上海','鲁迅 / 老舍 / 北京','赵树理 / 周立波 / 延安'],answer:0,analysis:'《红岩》作者罗广斌、杨益言，以1948-1949年重庆解放前夕的狱中斗争为核心。',points:[{score:'3分',text:'作者两人各1分，地点1分'}]},
+  {type:'简答题',source:'2025·广东模拟',q:'结合小萝卜头的经历，说说他为什么能在狱中成长为一个勇敢的小革命者？（4分）',opts:[],answer:-1,analysis:'①小萝卜头虽在狱中长大，却受到许云峰、成岗等革命者的教育和影响。②他渴望自由和知识，在狱中坚持学习认字。③他善良勇敢，帮助大人传递消息，逐渐成长为坚定的小革命者。④说明革命信仰可以在最恶劣的环境中传承。',points:[{score:'2分',text:'受到狱中革命者的教育影响，渴望自由和知识'},{score:'2分',text:'善良勇敢、帮助传递消息，革命信仰在恶劣环境中传承'}]},
+  {type:'选择题',source:'2024·湖南中考',q:'《红岩》中，出卖江姐、许云峰等同志的叛徒是',opts:['甫志高','郑克昌','徐鹏飞','严醉'],answer:0,analysis:'甫志高是出卖同志的叛徒；郑克昌是伪装潜伏的特务；徐鹏飞是特务头子；严醉是特务头目。',points:[{score:'2分',text:'甫志高是叛徒，A选项正确'}]},
+  {type:'简答题',source:'2023·陕西中考',q:'简述"红岩精神"的内涵。（4分）',opts:[],answer:-1,analysis:'红岩精神包括：坚定的共产主义理想信念；崇高的革命气节，视死如归；不怕牺牲的英雄气概；团结奋斗的集体主义精神；对党和人民无限忠诚。',points:[{score:'2分',text:'坚定的理想信念和崇高革命气节，视死如归'},{score:'2分',text:'不怕牺牲的英雄气概和团结奋斗的集体主义精神'}]}
+];
+
+const redcragQuotes=[
+  {text:'竹签子是竹做的，共产党员的意志是钢铁！',src:'江姐'},
+  {text:'如果需要为共产主义理想而牺牲，我们每个人，都应该，也可以做到脸不变色，心不跳。',src:'江姐'},
+  {text:'人，不能低下高贵的头，只有怕死鬼才乞求"自由"。',src:'成岗《我的"自白"书》'},
+  {text:'对着死亡我放声大笑，魔鬼的宫殿在笑声中动摇。',src:'成岗《我的"自白"书》'},
+  {text:'任脚下响着沉重的铁镣，任你把皮鞭举得高高，我不需要什么"自白"，哪怕胸口对着带血的刺刀！',src:'成岗《我的"自白"书》'},
+  {text:'毒刑拷打是太小的考验！',src:'江姐'},
+  {text:'我应该在烈火与热血中得到永生！',src:'叶挺《囚歌》'},
+  {text:'为人进出的门紧锁着，为狗爬走的洞敞开着。',src:'叶挺《囚歌》'},
+  {text:'我们有信心，我们有决心，我们一定能看到胜利的曙光！',src:'狱中战友'},
+  {text:'红岩上红梅开，千里冰霜脚下踩，三九严寒何所惧，一片丹心向阳开。',src:'《红梅赞》'}
+];
+
+const redcragChapterContent=[
+// 0 书籍档案 — 狱中绝密档案
+()=>`
+  <div class="prison-archive">
+    <div class="pa-header">
+      <div class="pa-stamp">渣滓洞<br>集中营</div>
+      <div><div class="pa-title">红 岩</div><div class="pa-sub">RED CRAG · 档案编号 1949-1127</div></div>
+    </div>
+    <div class="pa-grid">
+      <div class="pa-cell"><div class="k">书名</div><div class="v">《红岩》</div></div>
+      <div class="pa-cell"><div class="k">作者</div><div class="v">罗广斌、杨益言</div></div>
+      <div class="pa-cell"><div class="k">出版社</div><div class="v">人民教育出版社</div></div>
+      <div class="pa-cell"><div class="k">首版</div><div class="v">1961年（中青社）</div></div>
+      <div class="pa-cell"><div class="k">篇幅</div><div class="v">30章 / 约41万字</div></div>
+      <div class="pa-cell"><div class="k">背景</div><div class="v">1948—1949 重庆</div></div>
+      <div class="pa-cell"><div class="k">体裁</div><div class="v">长篇小说</div></div>
+      <div class="pa-cell"><div class="k">文学地位</div><div class="v">"三红一创"之一</div></div>
+    </div>
+    <div class="pa-section"><h4>档案摘要</h4><p>《红岩》描写重庆解放前夕，地下党人与国民党反动派在渣滓洞、白公馆展开的殊死斗争。作者罗广斌、杨益言均为当年狱中幸存者，以亲身经历为基础，历时十年三易其稿创作。三条线索交织——城市地下运动、华蓥山武装斗争、狱中斗争，最终汇聚于狱中斗争主线。</p></div>
+    <div class="pa-section"><h4>"红岩"精神解码</h4><p>红，是革命的颜色，是烈士的鲜血；岩，是坚硬的物质，是不屈的脊梁。"红岩"二字，象征革命者在酷刑与死亡面前如岩石般坚定不移的信仰，以及视死如归、用生命铸就的精神丰碑。它不是一个地名，而是一种穿越时空的精神力量。</p></div>
+  </div>
+`,
+// 1 内容概览 — 狱中笔记时间轴
+()=>`
+  <div class="prison-timeline">
+    ${redcragLsChapters.map(c=>`
+      <div class="pt-item">
+        <div class="pt-header"><span class="pt-time">${c.time}</span><span class="pt-place">📍 ${c.place}</span><span class="pt-event">${c.name.split('、')[1]||c.name}</span></div>
+        <div class="pt-task">👤 核心人物：${c.people}</div>
+        <div class="pt-desc">${c.events}</div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${c.points.map(p=>`<span style="font-size:11px;padding:3px 10px;background:rgba(178,34,34,.08);color:var(--red-deep);border-radius:12px;font-weight:700">★ ${p}</span>`).join('')}</div>
+      </div>
+    `).join('')}
+  </div>
+`,
+// 2 狱中斗争 — 信仰不屈录
+()=>`
+  <div class="lm-top">
+    <div class="lm-stat"><div class="n">30</div><div class="u">章</div><div class="de">全书</div></div>
+    <div class="lm-stat"><div class="n">41</div><div class="u">万字</div><div class="de">篇幅</div></div>
+    <div class="lm-stat"><div class="n">2</div><div class="u">大监狱</div><div class="de">渣滓洞·白公馆</div></div>
+    <div class="lm-stat"><div class="n">3</div><div class="u">条线索</div><div class="de">交织推进</div></div>
+    <div class="lm-stat"><div class="n">1948</div><div class="u">—1949</div><div class="de">时间跨度</div></div>
+    <div class="lm-stat"><div class="n">11·27</div><div class="u">大屠杀</div><div class="de">壮烈牺牲</div></div>
+  </div>
+  <div class="cb-h">狱中斗争 · 信仰不屈录</div>
+  <div class="prison-timeline">
+    ${redcragTimeline.map(t=>`
+      <div class="pt-item">
+        <div class="pt-header"><span class="pt-time">${t.time}</span><span class="pt-place">📍 ${t.place}</span><span class="pt-event">${t.event}</span></div>
+        <div class="pt-task">⚔ ${t.task}</div>
+        <div class="pt-desc">${t.desc}</div>
+      </div>
+    `).join('')}
+  </div>
+  <div class="cb-h">红岩精神</div>
+  <p class="cb-p">红岩精神是革命烈士对共产主义信念执着追求的高度概括。在渣滓洞、白公馆的人间地狱里，革命者们面对竹签钉指、铁镣加身，用生命回答了什么叫"信仰"。它包括：坚定如磐的理想信念、宁折不弯的革命气节、不怕牺牲的英雄气概、团结奋斗的集体主义精神。这种精神，比岩石更坚硬，比烈火更炽热。</p>
+`,
+// 3 人物档案 — 烈士详细档案
+()=>`
+  <div class="martyr-letters-rich">
+    <div class="letter-card-rich">
+      <div class="lcr-header"><div class="lcr-avatar">江</div><div><div class="lcr-name">江姐</div><div class="lcr-role">原名江雪琴 · 关押渣滓洞</div></div></div>
+      <div class="lcr-quote">"竹签子是竹做的，共产党员的意志是钢铁！毒刑拷打，那是太小的考验。"</div>
+      <div class="lcr-bio">不到三十岁，短发，中等身材，目光温和。政治上成熟的共产党员，对党忠贞，对敌斗争顽强不屈，危急关头从容镇定，对革命同志血肉情深，是无产阶级真善美的化身。</div>
+      <div class="lcr-deeds"><div class="lcr-section-title">典型事迹</div><ul>
+        <li>丈夫彭松涛牺牲，在城头看到悬挂的头颅，强忍悲痛继承遗志继续工作</li>
+        <li>被叛徒甫志高出卖被捕，面对竹签钉指酷刑坚贞不屈，震撼敌人</li>
+        <li>狱中建立党组织，与战友一起绣红旗迎接解放</li>
+        <li>1949年11月14日牺牲于歌乐山电台岚垭，年仅29岁</li>
+      </ul></div>
+      <div class="lcr-tags"><span class="letter-tag">坚贞不屈</span><span class="letter-tag">沉着稳重</span><span class="letter-tag">顾全大局</span><span class="letter-tag">钢铁意志</span></div>
+    </div>
+    <div class="letter-card-rich">
+      <div class="lcr-header"><div class="lcr-avatar">许</div><div><div class="lcr-name">许云峰</div><div class="lcr-role">地下党领导 · 关押白公馆</div></div></div>
+      <div class="lcr-quote">"我应该在烈火与热血中得到永生！通道已经挖好，你们一定要活着出去。"</div>
+      <div class="lcr-bio">一出场就显示高度政治敏感，从沙坪书店的变化中察觉危险。具有坚定信念、冷静果断、勇敢机智、富有自我牺牲精神和卓越领导才能的革命英雄形象。</div>
+      <div class="lcr-deeds"><div class="lcr-section-title">典型事迹</div><ul>
+        <li>茶园敏锐察觉甫志高叛变，果断通知李敬原撤离，自己却被捕</li>
+        <li>白公馆地窖中用手指和铁镣在坚硬岩石上挖出秘密通道</li>
+        <li>徐鹏飞设宴劝降，把宴席变成揭露敌人的讲台</li>
+        <li>将越狱通道秘密告诉华子良，自己从容就义</li>
+      </ul></div>
+      <div class="lcr-tags"><span class="letter-tag">冷静果断</span><span class="letter-tag">勇敢机智</span><span class="letter-tag">自我牺牲</span><span class="letter-tag">深谋远虑</span></div>
+    </div>
+    <div class="letter-card-rich">
+      <div class="lcr-header"><div class="lcr-avatar">成</div><div><div class="lcr-name">成岗</div><div class="lcr-role">《挺进报》印刷 · 关押白公馆</div></div></div>
+      <div class="lcr-quote">"人，不能低下高贵的头，只有怕死鬼才乞求'自由'。对着死亡我放声大笑！"</div>
+      <div class="lcr-bio">长江兵工总厂修配厂厂长，地下党员。为人诚恳，沉着镇定，工作勤恳，乐观坚毅，坚强不屈。负责《挺进报》的印刷、刻字、编辑工作。</div>
+      <div class="lcr-deeds"><div class="lcr-section-title">典型事迹</div><ul>
+        <li>敌人来抓时将扫帚挂到窗口——这是警报信号，掩护同志撤离</li>
+        <li>白公馆狱中继续刻钢板，秘密出版《挺进报》</li>
+        <li>面对审讯写下《我的"自白"书》，宣告革命气节</li>
+        <li>1949年11月27日牺牲于大屠杀</li>
+      </ul></div>
+      <div class="lcr-tags"><span class="letter-tag">沉着冷静</span><span class="letter-tag">坚强勇敢</span><span class="letter-tag">乐观坚毅</span><span class="letter-tag">忠于信仰</span></div>
+    </div>
+    <div class="letter-card-rich">
+      <div class="lcr-header"><div class="lcr-avatar">刘</div><div><div class="lcr-name">刘思扬</div><div class="lcr-role">剥削阶级出身 · 关押白公馆</div></div></div>
+      <div class="lcr-quote">"宁可把牢底坐穿，也绝不登报悔过自新！我选择的路，跪着也要走完。"</div>
+      <div class="lcr-bio">出身资产阶级家庭，却毅然投身革命。收听延安广播为《挺进报》供稿，在狱中是成岗的助手。忠贞不屈，充满革命热情和献身精神。</div>
+      <div class="lcr-deeds"><div class="lcr-section-title">典型事迹</div><ul>
+        <li>家人几次出面营救，拒绝在报上登悔过自新的启事</li>
+        <li>国民党假意释放，回家遭软禁，识破特务冒充地下党的骗局</li>
+        <li>再次被捕回白公馆，重获组织信任，继续战斗</li>
+        <li>1949年11月牺牲于大屠杀</li>
+      </ul></div>
+      <div class="lcr-tags"><span class="letter-tag">忠贞不屈</span><span class="letter-tag">革命热情</span><span class="letter-tag">献身精神</span><span class="letter-tag">信仰坚定</span></div>
+    </div>
+    <div class="letter-card-rich">
+      <div class="lcr-header"><div class="lcr-avatar">小</div><div><div class="lcr-name">小萝卜头</div><div class="lcr-role">原名宋振中 · 年龄最小烈士</div></div></div>
+      <div class="lcr-quote">"我把虫子放飞了，它也想自由。等解放了，我也要去上学，看看外面的世界。"</div>
+      <div class="lcr-bio">八个月大时随父母入狱，在狱中长大，因营养不良头大身小被称为"小萝卜头"。从未见过外面的世界，却在狱中接受革命教育，是中国年龄最小的烈士。</div>
+      <div class="lcr-deeds"><div class="lcr-section-title">典型事迹</div><ul>
+        <li>在狱中跟许云峰、成岗学认字，接受革命启蒙</li>
+        <li>放风时放飞虫子，表达对自由的渴望</li>
+        <li>利用年龄小不被注意的优势，帮助大人传递消息</li>
+        <li>1949年9月牺牲，年仅8岁，没能等到解放</li>
+      </ul></div>
+      <div class="lcr-tags"><span class="letter-tag">天真善良</span><span class="letter-tag">渴望自由</span><span class="letter-tag">人小志大</span><span class="letter-tag">勇敢聪慧</span></div>
+    </div>
+    <div class="letter-card-rich">
+      <div class="lcr-header"><div class="lcr-avatar">华</div><div><div class="lcr-name">华子良</div><div class="lcr-role">伪装疯癫 · 关押白公馆</div></div></div>
+      <div class="lcr-quote">"十五年了，所有人都当我是疯子。但我心里比谁都清楚——忍辱负重，只为最后一击！"</div>
+      <div class="lcr-bio">地下党员，为完成特殊任务伪装疯癫十五年。每天挑水、扫地、傻笑，被所有人轻视，却在关键时刻发挥了不可替代的作用。深谋远虑，忍辱负重。</div>
+      <div class="lcr-deeds"><div class="lcr-section-title">典型事迹</div><ul>
+        <li>伪装疯癫十五年，麻痹敌人，暗中观察狱中一切</li>
+        <li>记住许云峰挖通道的秘密，等待时机</li>
+        <li>1949年11月趁买菜机会逃出监狱，与地下党接应</li>
+        <li>带领部队回歌乐山，为营救狱友做出关键贡献</li>
+      </ul></div>
+      <div class="lcr-tags"><span class="letter-tag">忍辱负重</span><span class="letter-tag">深谋远虑</span><span class="letter-tag">忠于革命</span><span class="letter-tag">意志坚定</span></div>
+    </div>
+  </div>
+`,
+// 4 关系图谱 — 信仰传递链
+()=>`
+  <div style="text-align:center;margin-bottom:20px">
+    <div style="font-family:var(--serif);font-size:18px;font-weight:900;color:var(--red-deep);letter-spacing:3px">信仰的传递 · 精神的传承</div>
+    <div style="font-size:12px;color:var(--ink-mute);margin-top:4px">从一个人到一群人，从一代人到下一代人</div>
+  </div>
+  <div class="faith-chain">
+    <div class="faith-node">
+      <div class="faith-avatar">许</div>
+      <div class="faith-info"><div class="fi-name">许云峰 · 信仰的播种者</div><div class="fi-desc">在茶园果断通知同志转移，自己却被捕。在地窖中用手指和铁镣挖出越狱通道，将生的希望留给战友，自己从容就义。</div></div>
+      <div class="faith-arrow"></div>
+    </div>
+    <div class="faith-node">
+      <div class="faith-avatar">江</div>
+      <div class="faith-info"><div class="fi-name">江姐 · 信仰的坚守者</div><div class="fi-desc">丈夫牺牲强忍悲痛，竹签钉指坚贞不屈。她用钢铁意志告诉敌人：共产党员的意志比钢铁更硬。她的气节激励了狱中每一个人。</div></div>
+      <div class="faith-arrow"></div>
+    </div>
+    <div class="faith-node">
+      <div class="faith-avatar">成</div>
+      <div class="faith-info"><div class="fi-name">成岗 · 信仰的传播者</div><div class="fi-desc">挂扫帚报警掩护同志，在狱中继续刻钢板出版《挺进报》。写下《我的"自白"书》，用诗歌宣告：对着死亡我放声大笑。</div></div>
+      <div class="faith-arrow"></div>
+    </div>
+    <div class="faith-node">
+      <div class="faith-avatar">华</div>
+      <div class="faith-info"><div class="fi-name">华子良 · 信仰的潜伏者</div><div class="fi-desc">伪装疯癫十五年，忍辱负重，被所有人当成疯子。最终在关键时刻越狱与组织接应，为同志们打开生的大门。</div></div>
+      <div class="faith-arrow"></div>
+    </div>
+    <div class="faith-node">
+      <div class="faith-avatar">小</div>
+      <div class="faith-info"><div class="fi-name">小萝卜头 · 信仰的继承者</div><div class="fi-desc">在狱中长大，从未见过外面的世界。许云峰、成岗教他认字，给他讲革命故事。年仅8岁，却已懂得什么是自由和信仰。</div></div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:24px;padding:16px;background:var(--paper-dark);border-radius:8px;border-left:4px solid var(--gold)">
+    <div style="font-family:var(--serif);font-size:15px;color:var(--red-deep);font-weight:700;line-height:1.8">信仰不是一个人的事，它在人与人之间传递，在代与代之间传承。<br>这就是红岩精神——比岩石更坚硬，比烈火更炽热。</div>
+  </div>
+`,
+// 5 考点梳理 — 狱中密电
+()=>`
+  <div style="text-align:center;margin-bottom:18px">
+    <div style="font-family:var(--serif);font-size:16px;font-weight:900;color:var(--red-deep);letter-spacing:3px">━━ 破译狱中密电 · 考点全解 ━━</div>
+  </div>
+  <div class="cipher-list">
+    <div class="cipher-item">
+      <div class="cipher-code">━━ 密电 001 · 名著常识 ━━</div>
+      <div class="cipher-title">基础信息解码</div>
+      <div class="cipher-content">作者罗广斌、杨益言（二人均为狱中幸存者），1961年首版，全书30章约41万字，长篇小说，"三红一创"之一（与《红日》《红旗谱》《创业史》并称）。人教版为"名著阅读课程化丛书"。</div>
+      <span class="cipher-tag">常考：填空、选择</span>
+    </div>
+    <div class="cipher-item">
+      <div class="cipher-code">━━ 密电 002 · 人物分析 ━━</div>
+      <div class="cipher-title">人物形象答题公式</div>
+      <div class="cipher-content"><strong style="color:var(--red)">人物身份 + 典型事件 + 性格特点 + 精神品质</strong>。如江姐：地下党员+竹签钉指不屈+坚贞不屈沉着+钢铁般革命意志。务必结合具体情节，不可空泛。</div>
+      <span class="cipher-tag">答题模板必背 · 4分简答</span>
+    </div>
+    <div class="cipher-item">
+      <div class="cipher-code">━━ 密电 003 · 高频人物 ━━</div>
+      <div class="cipher-title">关键词判人物</div>
+      <div class="cipher-content">江姐——竹签钉指、坚贞不屈、顾全大局；许云峰——茶园应变、挖通道、冷静果断；成岗——挂扫帚报警、狱中办报、《我的"自白"书》；刘思扬——剥削阶级出身、拒绝悔过；华子良——装疯十五年、越狱接应；小萝卜头——年龄最小、渴望自由；甫志高——叛徒、对比反衬。</div>
+      <span class="cipher-tag">选择题高频</span>
+    </div>
+    <div class="cipher-item">
+      <div class="cipher-code">━━ 密电 004 · 核心情节 ━━</div>
+      <div class="cipher-title">情节排序与概括</div>
+      <div class="cipher-content">沙坪书店建立→甫志高叛变→江姐受刑（竹签钉指）→渣滓洞新年联欢→白公馆狱中办报→许云峰挖通道→刘思扬拒悔过→狱中绣红旗→11·27大屠杀→华子良越狱→重庆解放。注意时间先后顺序。</div>
+      <span class="cipher-tag">情节排序题</span>
+    </div>
+    <div class="cipher-item">
+      <div class="cipher-code">━━ 密电 005 · 绣红旗 ━━</div>
+      <div class="cipher-title">经典情节象征意义</div>
+      <div class="cipher-content">狱中绣红旗：①象征革命者身陷牢狱却心系新中国；②身处绝境依旧心怀希望，体现革命乐观主义；③红旗象征革命胜利，印证正义终将战胜黑暗；④点明"信仰不灭"的核心主旨。</div>
+      <span class="cipher-tag">作用分析 · 5分大题</span>
+    </div>
+    <div class="cipher-item">
+      <div class="cipher-code">━━ 密电 006 · 小萝卜头 ━━</div>
+      <div class="cipher-title">特殊人物的作用</div>
+      <div class="cipher-content">①象征革命新生力量和未来希望；②以儿童视角展现监狱残酷和革命者乐观；③说明革命信仰可在最恶劣环境中传承；④丰富人物群像，增强感染力，与成人革命者形成互补。</div>
+      <span class="cipher-tag">作用分析题</span>
+    </div>
+    <div class="cipher-item">
+      <div class="cipher-code">━━ 密电 007 · 主题思想 ━━</div>
+      <div class="cipher-title">红岩精神内核</div>
+      <div class="cipher-content">歌颂共产党人在极端恶劣环境中坚定的革命信仰和崇高革命气节；展现革命先烈视死如归、不怕牺牲的英雄气概；揭示"红岩精神"的深刻内涵——坚定如磐的信念、宁折不弯的气节、团结奋斗的精神；说明正义终将战胜黑暗。</div>
+      <span class="cipher-tag">主题概括 · 读后感</span>
+    </div>
+  </div>
+`,
+// 6 真题 — 审讯记录风格
+()=>`
+  <div class="quiz-header">
+    <span style="font-family:var(--serif);font-size:14px;color:var(--ink-soft)">审讯记录 · 真题精选（每次5道）</span>
+    <button class="quiz-refresh" onclick="refreshQuiz()">&#8635; 换一批</button>
+  </div>
+  <div id="quizList" class="interrogation-quiz"></div>
+`,
+// 7 金句
+()=>`
+  <div class="wheel-wrap" id="wheelWrap"></div>
+  <div class="wheel-display" id="wheelDisplay"><div class="wd-text">点击上方金句查看详情</div></div>
+  <div class="wheel-hint">点击金句切换 · 滚轮浏览（已调慢）</div>
+`
+];
+</script>
+</body>
+</html>
